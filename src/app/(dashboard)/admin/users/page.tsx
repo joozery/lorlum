@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   ShieldCheck, UserCheck, UserX, Users,
   Search, Plus, Edit2, Trash2, MoreHorizontal,
-  KeyRound, Eye, EyeOff, Mail,
+  KeyRound, Eye, EyeOff, Mail, Copy, Check, AlertCircle,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { StatsCard } from "@/components/shared/stats-card";
@@ -93,6 +93,8 @@ export default function AdminUsersPage() {
   const [showPass,     setShowPass]     = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [formError,    setFormError]    = useState("");
+  const [inviteResult, setInviteResult] = useState<{ name: string; email: string; link: string; emailSent: boolean; emailError: string } | null>(null);
+  const [copied,       setCopied]       = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -177,6 +179,7 @@ export default function AdminUsersPage() {
         }
         const updated = toUser(await res.json());
         setUsers((prev) => prev.map((u) => u.id === editing.id ? updated : u));
+        setDialogOpen(false);
       } else {
         const res = await fetch("/api/admin/users", {
           method: "POST",
@@ -188,10 +191,18 @@ export default function AdminUsersPage() {
           setFormError(err.error ?? "เกิดข้อผิดพลาด");
           return;
         }
-        const created = toUser(await res.json());
+        const data = await res.json();
+        const created = toUser(data);
         setUsers((prev) => [created, ...prev]);
+        setDialogOpen(false);
+        setInviteResult({
+          name:       form.name,
+          email:      form.email,
+          link:       data.inviteLink ?? "",
+          emailSent:  data.emailSent  ?? false,
+          emailError: data.emailError ?? "",
+        });
       }
-      setDialogOpen(false);
     } catch {
       setFormError("เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
@@ -372,6 +383,79 @@ export default function AdminUsersPage() {
         </div>
 
       </main>
+
+      {/* Invite result dialog */}
+      <Dialog open={!!inviteResult} onOpenChange={(v) => { if (!v) { setInviteResult(null); setCopied(false); } }}>
+        <DialogContent className="max-w-md p-0 overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/60">
+            <DialogTitle className="text-base font-semibold text-gray-800">สร้างบัญชีผู้ดูแลสำเร็จ</DialogTitle>
+            <p className="text-xs text-gray-400 mt-0.5">{inviteResult?.name} · {inviteResult?.email}</p>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            {/* Email status */}
+            {inviteResult?.emailSent ? (
+              <div className="flex items-start gap-3 rounded-lg bg-emerald-50 border border-emerald-100 px-4 py-3">
+                <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-emerald-700">ส่งอีเมลสำเร็จ</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">ระบบส่งลิงก์ตั้งรหัสผ่านไปที่ <strong>{inviteResult.email}</strong> แล้ว</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-100 px-4 py-3">
+                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-700">ส่งอีเมลไม่สำเร็จ</p>
+                  <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
+                    Resend ใช้ <code className="bg-amber-100 px-1 rounded">onboarding@resend.dev</code> ส่งได้แค่หาเจ้าของ account เท่านั้น<br />
+                    กรุณาคัดลอก link ด้านล่างแล้วส่งให้ผู้ดูแลคนใหม่โดยตรง
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Invite link */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-gray-500">ลิงก์ตั้งรหัสผ่าน (หมดอายุใน 72 ชั่วโมง)</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 overflow-hidden">
+                  <p className="text-xs text-gray-600 truncate font-mono">{inviteResult?.link}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (inviteResult?.link) {
+                      navigator.clipboard.writeText(inviteResult.link);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? "คัดลอกแล้ว" : "คัดลอก"}
+                </button>
+              </div>
+            </div>
+
+            {!inviteResult?.emailSent && (
+              <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  <strong>แก้ถาวร:</strong> verify domain ที่ <a href="https://resend.com/domains" target="_blank" className="underline">resend.com/domains</a> แล้วอัปเดต <code className="bg-blue-100 px-1 rounded">RESEND_FROM</code> ใน .env.local
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-1">
+              <button
+                onClick={() => { setInviteResult(null); setCopied(false); }}
+                className="text-sm font-medium bg-gray-900 text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border-none"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirm */}
       <DeleteConfirmDialog

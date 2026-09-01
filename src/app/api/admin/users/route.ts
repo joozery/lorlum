@@ -72,16 +72,19 @@ export async function POST(req: NextRequest) {
 
     // Send invite email
     const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-    const link = `${base}/set-password?token=${resetToken}`;
+    const inviteLink = `${base}/set-password?token=${resetToken}`;
+    let emailSent = false;
+    let emailError = "";
     try {
-      await sendAdminInviteEmail(email, name, link, role);
+      await sendAdminInviteEmail(email, name, inviteLink, role);
+      emailSent = true;
     } catch (mailErr) {
-      console.error("[invite email]", mailErr);
-      // Don't fail the creation — just log
+      emailError = mailErr instanceof Error ? mailErr.message : String(mailErr);
+      console.error("[invite email]", emailError);
     }
 
     const safe = { ...user.toObject(), passwordHash: undefined, resetToken: undefined, resetTokenExpiry: undefined };
-    return NextResponse.json(safe, { status: 201 });
+    return NextResponse.json({ ...safe, inviteLink, emailSent, emailError }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/users]", err);
     return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
