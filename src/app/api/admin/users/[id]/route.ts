@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { connectDB } from "@/lib/mongodb";
 import { AdminUser, hashPassword } from "@/models/AdminUser";
+import { sendAdminInviteEmail } from "@/lib/email";
 
 type Ctx = { params: Promise<{ id: string }> };
 const SAFE_FIELDS = "-passwordHash";
@@ -68,6 +70,43 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json(updated);
   } catch (err) {
     console.error("[PATCH /api/admin/users/[id]]", err);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}
+
+// POST /api/admin/users/[id]  action: resend-invite
+export async function POST(req: NextRequest, { params }: Ctx) {
+  try {
+    await connectDB();
+    const { id } = await params;
+    const { action } = await req.json();
+    if (action !== "resend-invite") {
+      return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    }
+
+    const user = await AdminUser.findById(id).select("name email role");
+    if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    const resetToken       = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    await AdminUser.findByIdAndUpdate(id, { resetToken, resetTokenExpiry });
+
+    const base       = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+    const inviteLink = `${base}/set-password?token=${resetToken}`;
+
+    let emailSent = false;
+    let emailError = "";
+    try {
+      await sendAdminInviteEmail(user.email, user.name, inviteLink, user.role);
+      emailSent = true;
+    } catch (err) {
+      emailError = err instanceof Error ? err.message : String(err);
+      console.error("[resend-invite email]", emailError);
+    }
+
+    return NextResponse.json({ ok: true, inviteLink, emailSent, emailError });
+  } catch (err) {
+    console.error("[POST /api/admin/users/[id]]", err);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

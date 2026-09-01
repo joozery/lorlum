@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   ShieldCheck, UserCheck, UserX, Users,
   Search, Plus, Edit2, Trash2, MoreHorizontal,
-  KeyRound, Eye, EyeOff, Mail, Copy, Check, AlertCircle,
+  KeyRound, Eye, EyeOff, Mail, Copy, Check, AlertCircle, Send,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { StatsCard } from "@/components/shared/stats-card";
@@ -93,8 +93,9 @@ export default function AdminUsersPage() {
   const [showPass,     setShowPass]     = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [formError,    setFormError]    = useState("");
-  const [inviteResult, setInviteResult] = useState<{ name: string; email: string; link: string; emailSent: boolean; emailError: string } | null>(null);
-  const [copied,       setCopied]       = useState(false);
+  const [inviteResult,  setInviteResult]  = useState<{ name: string; email: string; link: string; emailSent: boolean; emailError: string } | null>(null);
+  const [copied,        setCopied]        = useState(false);
+  const [resending,     setResending]     = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -214,6 +215,29 @@ export default function AdminUsersPage() {
     await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     setUsers((prev) => prev.filter((u) => u.id !== id));
     setDeleteTarget(null);
+  }
+
+  async function handleResendInvite(user: AdminUser) {
+    setResending(user.id);
+    try {
+      const res  = await fetch(`/api/admin/users/${user.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "resend-invite" }),
+      });
+      const data = await res.json();
+      setInviteResult({
+        name:       user.name,
+        email:      user.email,
+        link:       data.inviteLink  ?? "",
+        emailSent:  data.emailSent   ?? false,
+        emailError: data.emailError  ?? "",
+      });
+    } catch {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setResending(null);
+    }
   }
 
   async function handleToggleActive(user: AdminUser) {
@@ -363,6 +387,16 @@ export default function AdminUsersPage() {
                               onSelect={() => { openEdit(user); setShowPass(true); }}
                             >
                               <KeyRound className="h-3.5 w-3.5" /> เปลี่ยนรหัสผ่าน
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Item
+                              className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none disabled:opacity-50"
+                              onSelect={() => handleResendInvite(user)}
+                              disabled={resending === user.id}
+                            >
+                              {resending === user.id
+                                ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" /> กำลังส่ง...</>
+                                : <><Send className="h-3.5 w-3.5" /> ส่งลิงก์ตั้งรหัสอีกครั้ง</>
+                              }
                             </DropdownMenu.Item>
                             <DropdownMenu.Separator className="my-1 h-px bg-gray-100" />
                             <DropdownMenu.Item
