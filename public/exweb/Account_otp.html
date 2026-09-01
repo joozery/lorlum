@@ -1,0 +1,277 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
+  .lr-wrap{font-family:'Jost',sans-serif;background:#F7F2E8;min-height:520px;display:flex;flex-direction:column}
+  .lr-topbar{height:52px;border-bottom:1px solid rgba(180,155,90,0.18);display:flex;align-items:center;padding:0 32px;justify-content:space-between}
+  .lr-topbar-logo{font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:0.32em;color:#2C1F0F;font-weight:400}
+  .lr-topbar-logo small{display:block;font-family:'Jost',sans-serif;font-size:6.5px;letter-spacing:0.55em;color:#C9A752;margin-top:2px;font-weight:300;text-transform:uppercase}
+  .lr-topbar-link{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:#8C7355;text-decoration:none;font-weight:300;cursor:pointer}
+  .lr-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+  .lr-card{background:#FAF7F0;border:1px solid rgba(201,167,82,0.18);max-width:420px;width:100%;padding:48px 44px}
+
+  .lr-eyebrow{font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752;font-weight:300;margin-bottom:14px;display:block}
+  .lr-heading{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;letter-spacing:0.06em;color:#2C1F0F;line-height:1.15;margin-bottom:6px}
+  .lr-sub{font-size:12px;font-weight:300;letter-spacing:0.04em;color:#8C7355;line-height:1.7;margin-bottom:32px}
+
+  .lr-rule{height:1px;background:linear-gradient(90deg,rgba(201,167,82,0.35),rgba(201,167,82,0.05));border:none;margin:0 0 32px}
+
+  .lr-field{position:relative;margin-bottom:8px}
+  .lr-label{font-size:8.5px;letter-spacing:0.28em;text-transform:uppercase;color:#8C7355;font-weight:300;display:block;margin-bottom:8px}
+  .lr-input{width:100%;height:48px;border:none;border-bottom:1px solid rgba(201,167,82,0.35);background:transparent;font-family:'Jost',sans-serif;font-size:14px;font-weight:300;color:#2C1F0F;letter-spacing:0.06em;outline:none;padding:0 4px;transition:border-color 0.3s;box-sizing:border-box}
+  .lr-input::placeholder{color:rgba(140,115,85,0.45);font-size:13px}
+  .lr-input:focus{border-color:#C9A752}
+  .lr-hint{font-size:10.5px;font-weight:300;letter-spacing:0.04em;color:#8C7355;margin-bottom:28px;min-height:16px}
+  .lr-hint.err{color:#B85C3A}
+
+  .lr-btn{width:100%;height:50px;background:#2C1F0F;color:#E8D5A3;border:none;font-family:'Jost',sans-serif;font-size:9.5px;font-weight:400;letter-spacing:0.35em;text-transform:uppercase;cursor:pointer;transition:background 0.3s;margin-bottom:16px}
+  .lr-btn:hover{background:#4A3219}
+  .lr-btn:disabled{opacity:0.4;cursor:not-allowed}
+  .lr-btn-ghost{width:100%;height:40px;background:transparent;border:1px solid rgba(201,167,82,0.28);color:#8C7355;font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:0.28em;text-transform:uppercase;cursor:pointer;transition:all 0.3s}
+  .lr-btn-ghost:hover{border-color:#C9A752;color:#C9A752}
+
+  .lr-divider{display:flex;align-items:center;gap:12px;margin:20px 0}
+  .lr-divider-line{flex:1;height:1px;background:rgba(201,167,82,0.18)}
+  .lr-divider-txt{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(140,115,85,0.5);font-weight:300}
+
+  .lr-otp-row{display:flex;gap:10px;margin-bottom:8px}
+  .lr-otp-box{flex:1;height:54px;background:#F7F2E8;border:1px solid rgba(201,167,82,0.3);text-align:center;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:#2C1F0F;letter-spacing:0.04em;outline:none;caret-color:#C9A752;transition:border-color 0.3s}
+  .lr-otp-box:focus{border-color:#C9A752;background:#FAF7F0}
+  .lr-otp-box.filled{border-color:rgba(201,167,82,0.55)}
+  .lr-resend{font-size:10px;font-weight:300;letter-spacing:0.1em;color:#8C7355;text-align:center;margin-bottom:24px}
+  .lr-resend span{color:#C9A752;cursor:pointer;border-bottom:1px solid rgba(201,167,82,0.35)}
+  .lr-resend span:hover{color:#2C1F0F}
+  .lr-email-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(201,167,82,0.1);border:1px solid rgba(201,167,82,0.2);padding:4px 12px;margin-bottom:20px}
+  .lr-email-pill span{font-size:11.5px;font-weight:300;letter-spacing:0.06em;color:#6B4E2A}
+  .lr-email-pill button{background:none;border:none;cursor:pointer;color:#8C7355;font-size:10px;font-weight:300;letter-spacing:0.15em;text-transform:uppercase;padding:0;margin-left:4px}
+  .lr-email-pill button:hover{color:#C9A752}
+
+  .lr-success{text-align:center;padding:24px 0 8px}
+  .lr-success-icon{width:52px;height:52px;border-radius:50%;background:rgba(201,167,82,0.12);border:1px solid rgba(201,167,82,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px;color:#C9A752}
+  .lr-success-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;letter-spacing:0.06em;color:#2C1F0F;margin-bottom:8px}
+  .lr-success-sub{font-size:12px;font-weight:300;color:#8C7355;letter-spacing:0.04em;line-height:1.7}
+
+  .lr-progress{display:flex;gap:6px;margin-bottom:24px}
+  .lr-step{flex:1;height:2px;background:rgba(201,167,82,0.18)}
+  .lr-step.done{background:#C9A752}
+  .lr-step.active{background:linear-gradient(90deg,#C9A752,rgba(201,167,82,0.35))}
+
+  .slide{display:none}.slide.active{display:block}
+  .fade-in{animation:fadeUp 0.35s ease forwards}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .lr-countdown{font-size:10px;font-weight:300;letter-spacing:0.1em;color:#8C7355}
+  .lr-countdown span{color:#C9A752;font-weight:400}
+</style>
+
+<div class="lr-wrap">
+  <div class="lr-topbar">
+    <span class="lr-topbar-link" onclick="goBack()">← Back</span>
+    <div class="lr-topbar-logo">LORLUM<small>Luxury Shore Footwear</small></div>
+    <span style="width:60px"></span>
+  </div>
+
+  <div class="lr-body">
+    <div class="lr-card">
+
+      <!-- Progress bar -->
+      <div class="lr-progress" id="progressBar">
+        <div class="lr-step active" id="step-bar-1"></div>
+        <div class="lr-step" id="step-bar-2"></div>
+      </div>
+
+      <!-- SLIDE 1: EMAIL -->
+      <div class="slide active fade-in" id="slide-email">
+        <span class="lr-eyebrow">Maison Account</span>
+        <h1 class="lr-heading">Welcome</h1>
+        <p class="lr-sub">Enter your email to access your account or create a new one with us.</p>
+        <hr class="lr-rule">
+        <div class="lr-field">
+          <label class="lr-label" for="emailInput">E-mail address</label>
+          <input class="lr-input" id="emailInput" type="email" placeholder="yourname@domain.com" autocomplete="email" oninput="validateEmail()">
+        </div>
+        <div class="lr-hint" id="emailHint"></div>
+        <button class="lr-btn" id="continueBtn" onclick="sendOTP()" disabled>Continue</button>
+        <div class="lr-divider"><div class="lr-divider-line"></div><span class="lr-divider-txt">Or</span><div class="lr-divider-line"></div></div>
+        <button class="lr-btn-ghost" onclick="guestMsg()">Continue as Guest</button>
+      </div>
+
+      <!-- SLIDE 2: OTP -->
+      <div class="slide" id="slide-otp">
+        <span class="lr-eyebrow">Verification</span>
+        <h2 class="lr-heading" style="font-size:26px">One-Time Code</h2>
+        <p class="lr-sub" style="margin-bottom:16px">A 6-digit code has been sent to</p>
+        <div class="lr-email-pill">
+          <span id="emailDisplay"></span>
+          <button onclick="backToEmail()">Change</button>
+        </div>
+        <div class="lr-field">
+          <label class="lr-label">Enter code</label>
+          <div class="lr-otp-row" id="otpRow">
+            <input class="lr-otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+            <input class="lr-otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+            <input class="lr-otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+            <input class="lr-otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+            <input class="lr-otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+            <input class="lr-otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          </div>
+        </div>
+        <div class="lr-hint" id="otpHint"></div>
+        <button class="lr-btn" id="verifyBtn" onclick="verifyOTP()" disabled>Verify &amp; Enter</button>
+        <p class="lr-resend" id="resendRow">Didn't receive it? <span id="resendLink" onclick="resendOTP()">Resend code</span> <span class="lr-countdown" id="countdown" style="display:none"> — <span id="countNum">60</span>s</span></p>
+      </div>
+
+      <!-- SLIDE 3: SUCCESS -->
+      <div class="slide" id="slide-success">
+        <div class="lr-success fade-in">
+          <div class="lr-success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
+          <p class="lr-success-title">Welcome to LORLUM</p>
+          <p class="lr-success-sub">Your account has been verified.<br>You are now signed in.</p>
+          <div style="height:28px"></div>
+          <button class="lr-btn" onclick="alert('Redirecting to your account...')">Enter Maison</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  let countdownTimer = null;
+
+  function validateEmail() {
+    const v = document.getElementById('emailInput').value;
+    const btn = document.getElementById('continueBtn');
+    const hint = document.getElementById('emailHint');
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    btn.disabled = !ok;
+    if (v.length > 0 && !ok) {
+      hint.textContent = 'Expected format: yourname@domain.com';
+      hint.className = 'lr-hint err';
+    } else {
+      hint.textContent = '';
+      hint.className = 'lr-hint';
+    }
+  }
+
+  function sendOTP() {
+    const email = document.getElementById('emailInput').value;
+    document.getElementById('emailDisplay').textContent = email;
+    showSlide('slide-otp', 2);
+    startCountdown();
+    setTimeout(() => {
+      const boxes = document.querySelectorAll('.lr-otp-box');
+      if (boxes[0]) boxes[0].focus();
+    }, 400);
+  }
+
+  function showSlide(id, step) {
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    el.classList.add('active');
+    setTimeout(() => el.classList.add('fade-in'), 10);
+    [1,2].forEach(i => {
+      document.getElementById('step-bar-' + i).className = 'lr-step' + (i < step ? ' done' : (i === step ? ' active' : ''));
+    });
+    if (id === 'slide-success') {
+      document.getElementById('progressBar').style.display = 'none';
+    }
+  }
+
+  function backToEmail() {
+    clearInterval(countdownTimer);
+    document.querySelectorAll('.lr-otp-box').forEach(b => { b.value=''; b.classList.remove('filled'); });
+    document.getElementById('verifyBtn').disabled = true;
+    document.getElementById('otpHint').textContent = '';
+    showSlide('slide-email', 1);
+  }
+
+  function goBack() {
+    const active = document.querySelector('.slide.active');
+    if (!active) return;
+    if (active.id === 'slide-otp') backToEmail();
+  }
+
+  function guestMsg() {
+    const hint = document.getElementById('emailHint');
+    hint.textContent = 'Continuing as guest — no account required.';
+    hint.className = 'lr-hint';
+  }
+
+  // OTP boxes — auto-advance, backspace, paste
+  document.addEventListener('DOMContentLoaded', setupOTP);
+  function setupOTP() {
+    const boxes = Array.from(document.querySelectorAll('.lr-otp-box'));
+    boxes.forEach((box, i) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/\D/g,'').slice(-1);
+        if (box.value) { box.classList.add('filled'); if (i < 5) boxes[i+1].focus(); }
+        else box.classList.remove('filled');
+        checkOTPFull(boxes);
+      });
+      box.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !box.value && i > 0) { boxes[i-1].focus(); boxes[i-1].value=''; boxes[i-1].classList.remove('filled'); checkOTPFull(boxes); }
+      });
+      box.addEventListener('paste', e => {
+        e.preventDefault();
+        const paste = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+        paste.split('').forEach((c,j) => { if(boxes[j]) { boxes[j].value=c; boxes[j].classList.add('filled'); } });
+        checkOTPFull(boxes);
+        const next = boxes[Math.min(paste.length, 5)];
+        if (next) next.focus();
+      });
+    });
+  }
+
+  function checkOTPFull(boxes) {
+    const full = boxes.every(b => b.value.length === 1);
+    document.getElementById('verifyBtn').disabled = !full;
+  }
+
+  function verifyOTP() {
+    const boxes = Array.from(document.querySelectorAll('.lr-otp-box'));
+    const code = boxes.map(b=>b.value).join('');
+    const hint = document.getElementById('otpHint');
+    // Simulate: any 6-digit code works for demo
+    if (code.length === 6) {
+      hint.textContent = '';
+      clearInterval(countdownTimer);
+      showSlide('slide-success', 3);
+    } else {
+      hint.textContent = 'Please enter all 6 digits.';
+      hint.className = 'lr-hint err';
+    }
+  }
+
+  function startCountdown() {
+    let sec = 60;
+    const num = document.getElementById('countNum');
+    const cd = document.getElementById('countdown');
+    const link = document.getElementById('resendLink');
+    cd.style.display = 'inline';
+    link.style.pointerEvents = 'none';
+    link.style.opacity = '0.4';
+    num.textContent = sec;
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(() => {
+      sec--;
+      num.textContent = sec;
+      if (sec <= 0) {
+        clearInterval(countdownTimer);
+        cd.style.display = 'none';
+        link.style.pointerEvents = '';
+        link.style.opacity = '1';
+      }
+    }, 1000);
+  }
+
+  function resendOTP() {
+    const hint = document.getElementById('otpHint');
+    hint.textContent = 'A new code has been sent.';
+    hint.className = 'lr-hint';
+    startCountdown();
+    document.querySelectorAll('.lr-otp-box').forEach(b => { b.value=''; b.classList.remove('filled'); });
+    document.getElementById('verifyBtn').disabled = true;
+    document.querySelectorAll('.lr-otp-box')[0].focus();
+  }
+
+  setupOTP();
+</script>

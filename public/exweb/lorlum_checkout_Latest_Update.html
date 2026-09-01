@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LORLUM — Checkout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ivory:#F7F2E8;
+  --cream:#FAF7F0;
+  --white:#FFFFFF;
+  --gold:#C9A752;
+  --gold-lt:#E8D5A3;
+  --gold-pl:#F2E9D0;
+  --oak:#6B4E2A;
+  --oak-d:#4A3219;
+  --espresso:#2C1F0F;
+  --muted:#8C7355;
+  --text:#3A2C1A;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'Jost',sans-serif;
+  background:var(--ivory);
+  color:var(--text);
+  overflow-x:hidden;
+  min-height:100vh;
+}
+
+/* ─── NAV ─────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:68px;padding:0 52px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(247,242,232,0.97);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(201,167,82,0.12);
+}
+.nav-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:28px;
+  letter-spacing:0.34em;color:var(--oak-d);
+  text-decoration:none;text-align:center;line-height:1;
+  position:absolute;left:50%;transform:translateX(-50%);
+}
+.nav-logo small{
+  display:block;font-family:'Jost',sans-serif;
+  font-size:7px;font-weight:300;
+  letter-spacing:0.6em;color:var(--gold);
+  margin-top:3px;
+}
+.nav-back{
+  display:flex;align-items:center;gap:10px;
+  font-size:9px;font-weight:300;
+  letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;
+  transition:color 0.3s;
+}
+.nav-back:hover{color:var(--gold)}
+.nav-back svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.5;fill:none}
+.nav-secure{
+  display:flex;align-items:center;gap:7px;
+  font-size:8.5px;font-weight:300;
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--muted);
+}
+.nav-secure svg{width:13px;height:13px;stroke:var(--gold);stroke-width:1.5;fill:none}
+
+/* ─── PROGRESS BAR ────────────────────────────── */
+.progress-strip{
+  position:fixed;top:68px;left:0;right:0;z-index:998;
+  height:3px;background:rgba(201,167,82,0.1);
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--oak-d),var(--gold));
+  width:33%;
+  transition:width 0.8s cubic-bezier(0.23,1,0.32,1);
+}
+
+/* ─── LAYOUT ──────────────────────────────────── */
+.checkout-layout{
+  display:grid;
+  grid-template-columns:1fr 440px;
+  min-height:100vh;
+  padding-top:71px;
+}
+
+/* ─── LEFT: FORM SIDE ─────────────────────────── */
+.form-side{
+  padding:64px 72px 100px;
+  border-right:1px solid rgba(201,167,82,0.1);
+  min-height:calc(100vh - 71px);
+}
+
+/* STEPS INDICATOR */
+.steps-track{
+  display:flex;align-items:center;
+  margin-bottom:56px;
+}
+.stp{
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;
+  transition:opacity 0.3s;
+}
+.stp.inactive{opacity:0.4;cursor:default}
+.stp-circle{
+  width:26px;height:26px;
+  border-radius:50%;
+  border:1px solid rgba(201,167,82,0.35);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;font-weight:400;
+  color:var(--muted);
+  flex-shrink:0;
+  transition:all 0.4s;
+}
+.stp.active .stp-circle{
+  background:var(--espresso);
+  border-color:var(--espresso);
+  color:var(--gold-lt);
+}
+.stp.done .stp-circle{
+  background:var(--gold);
+  border-color:var(--gold);
+  color:var(--espresso);
+}
+.stp-done-icon{width:11px;height:11px;stroke:var(--espresso);stroke-width:2.2;fill:none}
+.stp-label{
+  font-size:8.5px;font-weight:300;
+  letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap;
+}
+.stp.active .stp-label{color:var(--oak-d)}
+.stp.done .stp-label{color:var(--gold)}
+.stp-line{
+  flex:1;height:1px;
+  background:rgba(201,167,82,0.15);
+  margin:0 16px;
+  min-width:20px;
+}
+
+/* STEP PANELS */
+.step-panel{
+  display:none;
+  animation:panelIn 0.5s cubic-bezier(0.23,1,0.32,1) both;
+}
+.step-panel.visible{display:block}
+@keyframes panelIn{
+  from{opacity:0;transform:translateX(18px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+/* Section header */
+.section-eyebrow{
+  font-size:8px;font-weight:300;
+  letter-spacing:0.5em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:12px;display:block;
+}
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:clamp(26px,2.8vw,36px);
+  letter-spacing:0.05em;color:var(--oak-d);
+  line-height:1.1;margin-bottom:6px;
+}
+.section-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;
+  font-size:14px;color:var(--muted);
+  letter-spacing:0.08em;margin-bottom:44px;
+}
+
+/* FORM GRID */
+.form-grid{display:flex;flex-direction:column;gap:0}
+.form-row{
+  display:grid;gap:20px;margin-bottom:22px;
+}
+.form-row.col2{grid-template-columns:1fr 1fr}
+.form-row.col3{grid-template-columns:2fr 1fr 1fr}
+.form-row.col1{grid-template-columns:1fr}
+.form-row.col-thirds{grid-template-columns:2fr 1fr}
+
+.field{display:flex;flex-direction:column;position:relative}
+.field-label{
+  font-size:8px;font-weight:300;
+  letter-spacing:0.36em;text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:10px;
+  transition:color 0.3s;
+}
+.field:focus-within .field-label{color:var(--gold)}
+
+.field-input{
+  height:52px;
+  border:none;
+  border-bottom:1px solid rgba(201,167,82,0.22);
+  border-radius:0;
+  background:transparent;
+  font-family:'Jost',sans-serif;
+  font-size:13px;font-weight:300;
+  letter-spacing:0.04em;
+  color:var(--text);
+  padding:0 0 0 2px;
+  outline:none;
+  transition:border-color 0.4s;
+  width:100%;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.field-input:focus{border-bottom-color:var(--gold)}
+.field-input::placeholder{
+  color:rgba(140,115,85,0.35);
+  font-style:italic;
+  font-size:12px;
+}
+
+/* Animated underline bar */
+.field::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;
+  width:0;height:1px;
+  background:var(--gold);
+  transition:width 0.4s cubic-bezier(0.23,1,0.32,1);
+}
+.field:focus-within::after{width:100%}
+
+/* Select */
+.field-input.sel{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238C7355' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 4px center;
+  cursor:pointer;
+  padding-right:24px;
+}
+
+/* Phone prefix */
+.phone-wrap{display:flex;align-items:flex-end;gap:0;border-bottom:1px solid rgba(201,167,82,0.22);}
+.phone-wrap:focus-within{border-bottom-color:var(--gold)}
+.phone-prefix{
+  font-size:13px;font-weight:300;
+  letter-spacing:0.04em;
+  color:var(--muted);
+  padding:0 12px 14px 2px;
+  border-right:1px solid rgba(201,167,82,0.15);
+  margin-right:12px;
+  white-space:nowrap;flex-shrink:0;
+  line-height:1;
+}
+.field-input.no-border{border-bottom:none;padding-bottom:13px}
+.phone-wrap::after{display:none}
+
+/* Divider */
+.form-divider{
+  height:1px;
+  background:linear-gradient(90deg,rgba(201,167,82,0.2) 0%,transparent 100%);
+  margin:32px 0 36px;
+}
+
+/* Step nav buttons */
+.step-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:48px;
+  padding-top:36px;
+  border-top:1px solid rgba(201,167,82,0.12);
+}
+.btn-back-step{
+  display:flex;align-items:center;gap:10px;
+  background:none;border:none;cursor:pointer;
+  font-size:9px;font-weight:300;
+  letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--muted);
+  transition:color 0.3s;
+  padding:0;
+}
+.btn-back-step:hover{color:var(--oak-d)}
+.btn-back-step svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.5;fill:none}
+.btn-next-step{
+  height:52px;
+  padding:0 44px;
+  background:var(--espresso);
+  color:var(--gold-lt);
+  border:none;
+  font-family:'Jost',sans-serif;
+  font-size:9.5px;font-weight:400;
+  letter-spacing:0.32em;text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.4s cubic-bezier(0.23,1,0.32,1);
+  display:flex;align-items:center;gap:12px;
+  position:relative;overflow:hidden;
+}
+.btn-next-step::before{
+  content:'';position:absolute;
+  left:-100%;top:0;bottom:0;width:100%;
+  background:linear-gradient(90deg,transparent,rgba(201,167,82,0.1),transparent);
+  transition:left 0.6s cubic-bezier(0.23,1,0.32,1);
+}
+.btn-next-step:hover::before{left:100%}
+.btn-next-step:hover{background:var(--oak-d)}
+.btn-next-arrow{
+  width:14px;height:14px;position:relative;flex-shrink:0;
+}
+.btn-next-arrow::before{
+  content:'';position:absolute;
+  width:10px;height:1px;
+  background:var(--gold);
+  top:6.5px;left:1px;
+}
+.btn-next-arrow::after{
+  content:'';position:absolute;
+  width:6px;height:6px;
+  border-right:1px solid var(--gold);
+  border-top:1px solid var(--gold);
+  transform:rotate(45deg);
+  top:3.5px;right:0;
+}
+
+/* ─── PAYMENT STEP SPECIFIC ───────────────────── */
+
+/* Virtual card preview */
+.card-preview{
+  width:100%;
+  max-width:380px;
+  height:220px;
+  margin:0 auto 44px;
+  background:linear-gradient(135deg,var(--espresso) 0%,var(--oak-d) 50%,#5C3D1E 100%);
+  border:1px solid rgba(201,167,82,0.2);
+  border-radius:4px;
+  padding:28px 32px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 24px 64px rgba(44,31,15,0.22);
+  transition:transform 0.6s cubic-bezier(0.23,1,0.32,1);
+}
+.card-preview:hover{transform:perspective(600px) rotateY(-4deg) translateY(-2px)}
+.card-shine{
+  position:absolute;top:-60%;right:-20%;
+  width:180px;height:300px;
+  background:linear-gradient(135deg,rgba(201,167,82,0.07),transparent,rgba(201,167,82,0.04));
+  transform:rotate(18deg);
+  pointer-events:none;
+}
+.card-chip{
+  width:38px;height:28px;
+  border:1px solid rgba(201,167,82,0.35);
+  border-radius:4px;
+  background:linear-gradient(135deg,rgba(201,167,82,0.15),rgba(201,167,82,0.05));
+  margin-bottom:28px;
+  position:relative;
+}
+.card-chip::before{
+  content:'';position:absolute;
+  left:50%;top:0;bottom:0;width:1px;
+  background:rgba(201,167,82,0.2);
+}
+.card-chip::after{
+  content:'';position:absolute;
+  top:50%;left:0;right:0;height:1px;
+  background:rgba(201,167,82,0.2);
+}
+.card-number-display{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:20px;
+  letter-spacing:0.22em;
+  color:var(--gold-lt);
+  margin-bottom:22px;
+  opacity:0.9;
+}
+.card-meta-row{
+  display:flex;justify-content:space-between;align-items:flex-end;
+}
+.card-meta-item{}
+.card-meta-label{
+  font-size:7px;font-weight:300;
+  letter-spacing:0.3em;text-transform:uppercase;
+  color:rgba(201,167,82,0.5);
+  margin-bottom:4px;
+}
+.card-meta-val{
+  font-family:'Jost',sans-serif;
+  font-size:11px;font-weight:300;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--gold-lt);
+  opacity:0.85;
+}
+.card-brand-mark{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:11px;
+  letter-spacing:0.3em;
+  color:var(--gold);
+  opacity:0.7;
+}
+
+/* Payment method selector */
+.pay-methods{
+  display:flex;gap:10px;
+  margin-bottom:36px;
+}
+.pay-method{
+  flex:1;
+  height:48px;
+  border:1px solid rgba(201,167,82,0.2);
+  background:transparent;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:'Jost',sans-serif;
+  font-size:8.5px;font-weight:300;
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--muted);
+  transition:all 0.3s;
+}
+.pay-method:hover{border-color:rgba(201,167,82,0.45);color:var(--oak-d)}
+.pay-method.active{
+  border-color:var(--gold);
+  background:rgba(201,167,82,0.06);
+  color:var(--oak-d);
+}
+.pay-method svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.5;fill:none;flex-shrink:0}
+.pay-method.active svg{stroke:var(--gold)}
+
+/* CVV hint */
+.cvv-hint{
+  display:flex;align-items:center;gap:8px;
+  margin-top:8px;
+  font-size:9px;font-weight:300;
+  letter-spacing:0.1em;color:var(--muted);
+  font-style:italic;
+}
+.cvv-hint svg{width:13px;height:13px;stroke:var(--muted);stroke-width:1.4;fill:none;flex-shrink:0}
+
+/* Secure bar */
+.secure-bar{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px;
+  border:1px solid rgba(201,167,82,0.12);
+  background:rgba(201,167,82,0.03);
+  margin-top:10px;
+  margin-bottom:0;
+}
+.secure-bar svg{width:14px;height:14px;stroke:var(--gold);stroke-width:1.5;fill:none;flex-shrink:0}
+.secure-bar-text{
+  font-size:9px;font-weight:300;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--muted);line-height:1.6;
+}
+
+/* PLACE ORDER */
+.btn-place-order{
+  width:100%;height:62px;
+  background:var(--gold);
+  color:var(--espresso);
+  border:none;
+  font-family:'Jost',sans-serif;
+  font-size:10px;font-weight:400;
+  letter-spacing:0.38em;text-transform:uppercase;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  transition:all 0.4s cubic-bezier(0.23,1,0.32,1);
+  position:relative;overflow:hidden;
+  margin-top:36px;
+}
+.btn-place-order::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.22) 0%,transparent 60%);
+  pointer-events:none;
+}
+.btn-place-order:hover{background:var(--gold-lt);letter-spacing:0.44em}
+.btn-place-order svg{width:14px;height:14px;stroke:var(--espresso);stroke-width:1.8;fill:none;flex-shrink:0}
+
+/* ─── RIGHT: ORDER SUMMARY ────────────────────── */
+.summary-side{
+  background:var(--cream);
+  border-left:1px solid rgba(201,167,82,0.1);
+  padding:64px 52px 80px;
+  position:sticky;
+  top:71px;
+  height:calc(100vh - 71px);
+  overflow-y:auto;
+}
+
+.order-eyebrow{
+  font-size:8px;font-weight:300;
+  letter-spacing:0.5em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:14px;display:block;
+}
+.order-title{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:22px;
+  letter-spacing:0.08em;color:var(--oak-d);
+  margin-bottom:32px;
+  padding-bottom:24px;
+  border-bottom:1px solid rgba(201,167,82,0.12);
+}
+
+/* Order item */
+.order-item{
+  display:flex;gap:18px;
+  margin-bottom:28px;
+  padding-bottom:28px;
+  border-bottom:1px solid rgba(201,167,82,0.1);
+}
+.order-item-thumb{
+  width:72px;
+  aspect-ratio:3/3.6;
+  background:linear-gradient(148deg,#F7EDD5 0%,#E8C67A 40%,#D4780A 100%);
+  border:1px solid rgba(201,167,82,0.15);
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.order-item-thumb-letter{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:28px;
+  color:rgba(255,255,255,0.28);
+  user-select:none;
+}
+.order-item-qty{
+  position:absolute;top:-8px;right:-8px;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--espresso);color:var(--gold-lt);
+  font-size:9px;font-weight:400;
+  display:flex;align-items:center;justify-content:center;
+}
+.order-item-info{flex:1;padding-top:2px}
+.order-item-brand{
+  font-size:7.5px;font-weight:300;
+  letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:6px;
+}
+.order-item-name{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:15px;
+  letter-spacing:0.04em;color:var(--oak-d);
+  line-height:1.2;margin-bottom:8px;
+}
+.order-item-specs{
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.order-item-spec{
+  font-size:8.5px;font-weight:300;
+  letter-spacing:0.1em;color:var(--muted);
+  display:flex;gap:4px;
+}
+.order-item-spec::after{content:'·';color:rgba(201,167,82,0.3)}
+.order-item-spec:last-child::after{display:none}
+.order-item-price{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:600;font-size:17px;
+  letter-spacing:0.08em;color:var(--gold);
+  margin-top:10px;
+}
+
+/* Promo */
+.promo-wrap{margin-bottom:20px}
+.promo-field-row{
+  display:flex;
+  border-bottom:1px solid rgba(201,167,82,0.22);
+  margin-top:14px;
+  transition:border-color 0.3s;
+}
+.promo-field-row:focus-within{border-bottom-color:var(--gold)}
+.promo-field{
+  flex:1;
+  height:44px;
+  border:none;
+  background:transparent;
+  font-family:'Jost',sans-serif;
+  font-size:11px;font-weight:300;
+  letter-spacing:0.12em;
+  color:var(--text);
+  outline:none;
+  padding:0 4px;
+}
+.promo-field::placeholder{
+  color:rgba(140,115,85,0.4);
+  font-style:italic;font-size:10px;
+}
+.promo-apply{
+  height:44px;
+  padding:0 0 0 14px;
+  background:none;border:none;
+  font-family:'Jost',sans-serif;
+  font-size:8px;font-weight:300;
+  letter-spacing:0.25em;text-transform:uppercase;
+  color:var(--gold);
+  cursor:pointer;
+  transition:color 0.3s;
+}
+.promo-apply:hover{color:var(--oak-d)}
+.promo-toggle{
+  background:none;border:none;cursor:pointer;
+  font-size:9px;font-weight:300;
+  letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+  padding:0;transition:color 0.3s;
+}
+.promo-toggle:hover{color:var(--gold)}
+.promo-body{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.4s cubic-bezier(0.23,1,0.32,1);
+}
+.promo-body.open{max-height:80px}
+.plus-icon{
+  width:12px;height:12px;position:relative;flex-shrink:0;
+}
+.plus-icon::before,.plus-icon::after{
+  content:'';position:absolute;background:currentColor;
+  transition:transform 0.35s;
+}
+.plus-icon::before{width:1px;height:10px;top:1px;left:5.5px}
+.plus-icon::after{width:10px;height:1px;top:5.5px;left:1px}
+.promo-toggle.open .plus-icon::before{transform:rotate(90deg)}
+
+/* Totals */
+.totals-rows{margin-top:4px;margin-bottom:0}
+.total-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:8px 0;
+}
+.total-row-label{
+  font-size:9.5px;font-weight:300;
+  letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--muted);
+}
+.total-row-val{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:15px;
+  letter-spacing:0.06em;color:var(--text);
+}
+.total-row-val.free{color:#5A7A5A}
+.totals-divider{
+  height:1px;
+  background:linear-gradient(90deg,rgba(201,167,82,0.2),transparent);
+  margin:10px 0;
+}
+.grand-total-row{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding:18px 0 0;
+  border-top:1px solid rgba(201,167,82,0.18);
+  margin-top:4px;
+}
+.grand-label{
+  font-size:9.5px;font-weight:400;
+  letter-spacing:0.28em;text-transform:uppercase;
+  color:var(--oak-d);
+}
+.grand-sublabel{
+  font-size:8px;font-weight:300;
+  letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--muted);margin-top:3px;
+}
+.grand-val{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:600;font-size:28px;
+  letter-spacing:0.1em;color:var(--gold);
+}
+
+/* Trust mini */
+.trust-mini{
+  display:flex;flex-direction:column;gap:10px;
+  margin-top:36px;
+  padding-top:28px;
+  border-top:1px solid rgba(201,167,82,0.1);
+}
+.trust-mini-item{
+  display:flex;align-items:center;gap:12px;
+  font-size:9px;font-weight:300;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);
+}
+.trust-mini-item svg{width:14px;height:14px;stroke:var(--gold);stroke-width:1.5;fill:none;flex-shrink:0}
+
+/* ─── CONFIRMATION SCREEN ─────────────────────── */
+#confirmScreen{
+  display:none;
+  position:fixed;inset:0;z-index:9000;
+  background:var(--ivory);
+  animation:fadeIn 0.6s ease both;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.confirm-inner{
+  max-width:560px;
+  margin:0 auto;
+  padding:120px 40px 80px;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+}
+.confirm-ring{
+  width:80px;height:80px;
+  border:1px solid rgba(201,167,82,0.3);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:32px;
+  position:relative;
+}
+.confirm-ring::before{
+  content:'';
+  position:absolute;inset:-8px;
+  border:1px solid rgba(201,167,82,0.1);
+  border-radius:50%;
+}
+.confirm-ring svg{width:28px;height:28px;stroke:var(--gold);stroke-width:1.5;fill:none}
+.confirm-eyebrow{
+  font-size:8px;font-weight:300;
+  letter-spacing:0.55em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:16px;
+}
+.confirm-title{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:42px;
+  letter-spacing:0.06em;color:var(--oak-d);
+  margin-bottom:10px;line-height:1.05;
+}
+.confirm-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;
+  font-size:16px;color:var(--muted);
+  letter-spacing:0.1em;margin-bottom:44px;
+  line-height:1.7;
+}
+.confirm-ref{
+  font-size:8.5px;font-weight:300;
+  letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.confirm-ref-val{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:18px;
+  letter-spacing:0.2em;color:var(--gold);
+  margin-bottom:48px;
+}
+.confirm-divider{
+  width:40px;height:1px;background:rgba(201,167,82,0.4);
+  margin:0 auto 40px;
+}
+.btn-confirm-back{
+  height:52px;padding:0 44px;
+  background:var(--espresso);
+  color:var(--gold-lt);
+  border:none;
+  font-family:'Jost',sans-serif;
+  font-size:9.5px;font-weight:300;
+  letter-spacing:0.3em;text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.btn-confirm-back:hover{background:var(--oak-d)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(12px);
+  z-index:9999;
+  background:var(--espresso);
+  border:1px solid rgba(201,167,82,0.3);
+  padding:16px 28px;
+  display:flex;align-items:center;gap:14px;
+  opacity:0;
+  transition:all 0.4s cubic-bezier(0.23,1,0.32,1);
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast svg{width:14px;height:14px;stroke:var(--gold);stroke-width:1.8;fill:none;flex-shrink:0}
+.toast-text{
+  font-size:9px;font-weight:300;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--gold-lt);
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="lorlum_cart.html" class="nav-back">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Return to Bag
+  </a>
+  <a href="#" class="nav-logo">LORLUM<small>Luxury Shore Footwear</small></a>
+  <div class="nav-secure">
+    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Secure Checkout
+  </div>
+</nav>
+
+<!-- PROGRESS BAR -->
+<div class="progress-strip">
+  <div class="progress-fill" id="progressFill"></div>
+</div>
+
+<!-- LAYOUT -->
+<div class="checkout-layout">
+
+  <!-- ── LEFT: FORM ── -->
+  <div class="form-side">
+
+    <!-- STEPS -->
+    <div class="steps-track">
+      <div class="stp active" id="stp1" onclick="goToStep(1)">
+        <div class="stp-circle" id="stpCircle1">1</div>
+        <span class="stp-label">Contact</span>
+      </div>
+      <div class="stp-line"></div>
+      <div class="stp inactive" id="stp2" onclick="goToStep(2)">
+        <div class="stp-circle" id="stpCircle2">2</div>
+        <span class="stp-label">Delivery</span>
+      </div>
+      <div class="stp-line"></div>
+      <div class="stp inactive" id="stp3" onclick="goToStep(3)">
+        <div class="stp-circle" id="stpCircle3">3</div>
+        <span class="stp-label">Payment</span>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: CONTACT ── -->
+    <div class="step-panel visible" id="stepPanel1">
+      <span class="section-eyebrow">Step 1 of 3</span>
+      <h1 class="section-title">Contact Information</h1>
+      <p class="section-sub">Your details for order confirmation &amp; updates</p>
+
+      <div class="form-grid">
+        <div class="form-row col2">
+          <div class="field">
+            <label class="field-label">First Name</label>
+            <input class="field-input" type="text" id="firstName" placeholder="Given name" autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label class="field-label">Last Name</label>
+            <input class="field-input" type="text" id="lastName" placeholder="Family name" autocomplete="family-name">
+          </div>
+        </div>
+
+        <div class="form-row col1">
+          <div class="field">
+            <label class="field-label">Email Address</label>
+            <input class="field-input" type="email" id="email" placeholder="your@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-row col1">
+          <div class="field">
+            <label class="field-label">Phone Number</label>
+            <div class="phone-wrap">
+              <span class="phone-prefix">+66</span>
+              <input class="field-input no-border" type="tel" id="phone" placeholder="81 234 5678" autocomplete="tel">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-row col1">
+          <div class="field">
+            <label class="field-label">Order Notes <span style="font-style:italic;letter-spacing:0.08em;font-size:9px;text-transform:none;color:rgba(140,115,85,0.5)">(optional)</span></label>
+            <input class="field-input" type="text" placeholder="Gift message, special instructions…">
+          </div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <a href="lorlum_cart.html" class="btn-back-step">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Bag
+        </a>
+        <button class="btn-next-step" onclick="nextStep(1)">
+          Continue to Delivery
+          <span class="btn-next-arrow"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: DELIVERY ── -->
+    <div class="step-panel" id="stepPanel2">
+      <span class="section-eyebrow">Step 2 of 3</span>
+      <h1 class="section-title">Delivery Address</h1>
+      <p class="section-sub">Complimentary insured EMS delivery within Thailand</p>
+
+      <div class="form-grid">
+        <div class="form-row col1">
+          <div class="field">
+            <label class="field-label">Street Address</label>
+            <input class="field-input" type="text" placeholder="Building name, number, street" autocomplete="address-line1">
+          </div>
+        </div>
+
+        <div class="form-row col1">
+          <div class="field">
+            <label class="field-label">Suite / Floor / Unit <span style="font-style:italic;letter-spacing:0.08em;font-size:9px;text-transform:none;color:rgba(140,115,85,0.5)">(optional)</span></label>
+            <input class="field-input" type="text" placeholder="Floor 12, Unit B…" autocomplete="address-line2">
+          </div>
+        </div>
+
+        <div class="form-row col2">
+          <div class="field">
+            <label class="field-label">District / Subdistrict</label>
+            <input class="field-input" type="text" placeholder="Khlong Toei, Silom…" autocomplete="address-level3">
+          </div>
+          <div class="field">
+            <label class="field-label">Province</label>
+            <select class="field-input sel" autocomplete="address-level1">
+              <option value="" disabled selected>Select province</option>
+              <option>Bangkok</option>
+              <option>Chiang Mai</option>
+              <option>Phuket</option>
+              <option>Chiang Rai</option>
+              <option>Nonthaburi</option>
+              <option>Samut Prakan</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row col-thirds">
+          <div class="field">
+            <label class="field-label">City</label>
+            <input class="field-input" type="text" placeholder="City" autocomplete="address-level2">
+          </div>
+          <div class="field">
+            <label class="field-label">Postcode</label>
+            <input class="field-input" type="text" placeholder="10110" maxlength="5" autocomplete="postal-code">
+          </div>
+        </div>
+
+        <div class="form-row col1">
+          <div class="field">
+            <label class="field-label">Country</label>
+            <select class="field-input sel" autocomplete="country">
+              <option value="TH" selected>Thailand</option>
+              <option>Japan</option>
+              <option>Singapore</option>
+              <option>Hong Kong</option>
+              <option>United Kingdom</option>
+              <option>United States</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-back-step" onclick="goToStep(1)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Contact
+        </button>
+        <button class="btn-next-step" onclick="nextStep(2)">
+          Continue to Payment
+          <span class="btn-next-arrow"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: PAYMENT ── -->
+    <div class="step-panel" id="stepPanel3">
+      <span class="section-eyebrow">Step 3 of 3</span>
+      <h1 class="section-title">Payment Details</h1>
+      <p class="section-sub">Your transaction is encrypted and fully secured</p>
+
+      <!-- Virtual Card Preview -->
+      <div class="card-preview" id="cardPreview">
+        <div class="card-shine"></div>
+        <div class="card-chip"></div>
+        <div class="card-number-display" id="cardNumDisplay">•••• &nbsp;•••• &nbsp;•••• &nbsp;••••</div>
+        <div class="card-meta-row">
+          <div class="card-meta-item">
+            <div class="card-meta-label">Cardholder</div>
+            <div class="card-meta-val" id="cardNameDisplay">YOUR NAME</div>
+          </div>
+          <div class="card-meta-item">
+            <div class="card-meta-label">Expires</div>
+            <div class="card-meta-val" id="cardExpDisplay">MM / YY</div>
+          </div>
+          <div class="card-brand-mark" id="cardBrandDisplay">LORLUM</div>
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div class="pay-methods">
+        <button class="pay-method active" id="pmCredit" onclick="selectPM('credit')">
+          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Credit Card
+        </button>
+        <button class="pay-method" id="pmTransfer" onclick="selectPM('transfer')">
+          <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Bank Transfer
+        </button>
+      </div>
+
+      <!-- Credit Card Form -->
+      <div id="creditForm">
+        <div class="form-grid">
+          <div class="form-row col1">
+            <div class="field">
+              <label class="field-label">Cardholder Name</label>
+              <input class="field-input" type="text" id="cardName" placeholder="As it appears on your card"
+                oninput="updateCardName(this.value)" autocomplete="cc-name">
+            </div>
+          </div>
+          <div class="form-row col1">
+            <div class="field">
+              <label class="field-label">Card Number</label>
+              <input class="field-input" type="text" id="cardNum" placeholder="•••• •••• •••• ••••"
+                maxlength="19" oninput="updateCardNum(this)" autocomplete="cc-number">
+            </div>
+          </div>
+          <div class="form-row col2">
+            <div class="field">
+              <label class="field-label">Expiry Date</label>
+              <input class="field-input" type="text" id="cardExp" placeholder="MM / YY"
+                maxlength="7" oninput="updateCardExp(this)" autocomplete="cc-exp">
+            </div>
+            <div class="field">
+              <label class="field-label">Security Code</label>
+              <input class="field-input" type="password" placeholder="•••" maxlength="4" autocomplete="cc-csc">
+              <div class="cvv-hint">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                3 digits on back; Amex 4 digits front
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bank Transfer placeholder -->
+      <div id="transferForm" style="display:none;padding:24px;background:rgba(201,167,82,0.04);border:1px solid rgba(201,167,82,0.15);margin-bottom:0">
+        <p style="font-size:9px;font-weight:300;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Transfer details will be emailed after order confirmation</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Bank</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--oak-d)">Kasikorn Bank</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Account Name</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--oak-d)">LORLUM Co., Ltd.</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Reference</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">LRL-XXXXXX</span></div>
+        </div>
+      </div>
+
+      <div class="secure-bar">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="secure-bar-text">All transactions secured with 256-bit SSL encryption · PCI DSS compliant</span>
+      </div>
+
+      <button class="btn-place-order" onclick="placeOrder()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Confirm &amp; Place Order — ฿101,650
+      </button>
+
+      <div style="margin-top:16px">
+        <button class="btn-back-step" onclick="goToStep(2)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Delivery
+        </button>
+      </div>
+    </div>
+
+  </div>
+  <!-- ── /LEFT ── -->
+
+  <!-- ── RIGHT: SUMMARY ── -->
+  <div class="summary-side">
+    <span class="order-eyebrow">Your Order</span>
+    <h3 class="order-title">Order Summary</h3>
+
+    <div class="order-item">
+      <div class="order-item-thumb">
+        <span class="order-item-thumb-letter">L</span>
+        <span class="order-item-qty">1</span>
+      </div>
+      <div class="order-item-info">
+        <div class="order-item-brand">Lorlum · Heritage</div>
+        <div class="order-item-name">Orange Lambskin Suede Mule</div>
+        <div class="order-item-specs">
+          <span class="order-item-spec">Amber</span>
+          <span class="order-item-spec">EU 42</span>
+          <span class="order-item-spec">Lambskin Suede</span>
+        </div>
+        <div class="order-item-price">฿95,000</div>
+      </div>
+    </div>
+
+    <!-- Promo -->
+    <div class="promo-wrap">
+      <button class="promo-toggle" id="promoToggle" onclick="togglePromo()">
+        <span class="plus-icon"></span>
+        Promotional Code
+      </button>
+      <div class="promo-body" id="promoBody">
+        <div class="promo-field-row">
+          <input class="promo-field" type="text" placeholder="Enter your code…" id="promoInput">
+          <button class="promo-apply" onclick="applyPromo()">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="totals-rows">
+      <div class="total-row">
+        <span class="total-row-label">Subtotal</span>
+        <span class="total-row-val">฿95,000</span>
+      </div>
+      <div class="total-row">
+        <span class="total-row-label">Shipping</span>
+        <span class="total-row-val free">Complimentary</span>
+      </div>
+      <div class="total-row">
+        <span class="total-row-label">Gift Wrapping</span>
+        <span class="total-row-val free">Complimentary</span>
+      </div>
+      <div class="totals-divider"></div>
+      <div class="total-row">
+        <span class="total-row-label">VAT (7%)</span>
+        <span class="total-row-val">฿6,650</span>
+      </div>
+    </div>
+
+    <div class="grand-total-row">
+      <div>
+        <div class="grand-label">Total</div>
+        <div class="grand-sublabel">Including VAT · THB</div>
+      </div>
+      <div class="grand-val">฿101,650</div>
+    </div>
+
+    <div class="trust-mini">
+      <div class="trust-mini-item">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        256-bit SSL Encryption
+      </div>
+      <div class="trust-mini-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Insured EMS · 3–5 Business Days
+      </div>
+      <div class="trust-mini-item">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Complimentary 30-Day Returns
+      </div>
+      <div class="trust-mini-item">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Secure Card &amp; Bank Payments
+      </div>
+    </div>
+  </div>
+  <!-- ── /RIGHT ── -->
+
+</div>
+
+<!-- CONFIRMATION SCREEN -->
+<div id="confirmScreen">
+  <nav style="position:relative;background:var(--ivory);border-bottom:1px solid rgba(201,167,82,0.1)">
+    <div style="max-width:560px;margin:0 auto;padding:0 40px;height:68px;display:flex;align-items:center;justify-content:center">
+      <a href="#" class="nav-logo" style="position:static;transform:none">LORLUM<small>Luxury Shore Footwear</small></a>
+    </div>
+  </nav>
+  <div class="confirm-inner">
+    <div class="confirm-ring">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <span class="confirm-eyebrow">Order Confirmed</span>
+    <h2 class="confirm-title">Thank You</h2>
+    <p class="confirm-sub">Your Orange Lambskin Suede Mule is being prepared<br>with the care it deserves. A confirmation has been<br>sent to your email address.</p>
+    <div class="confirm-ref">Order Reference</div>
+    <div class="confirm-ref-val">LRL-2025-88421</div>
+    <div class="confirm-divider"></div>
+    <button class="btn-confirm-back" onclick="window.location.href='lorlum_cart.html'">Continue Shopping</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  <span class="toast-text" id="toastText"></span>
+</div>
+
+<script>
+let currentStep = 1;
+const TOTAL = 101650;
+
+// ── STEP NAVIGATION ──────────────────────────
+function goToStep(n) {
+  if (n > currentStep) return; // Can only go back freely
+  _setStep(n);
+}
+
+function nextStep(from) {
+  if (from === 1) {
+    const fn = document.getElementById('firstName').value.trim();
+    const em = document.getElementById('email').value.trim();
+    if (!fn || !em) { showToast('Please fill in your name and email'); return; }
+  }
+  _setStep(from + 1);
+}
+
+function _setStep(n) {
+  // Hide all panels
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('visible'));
+  document.getElementById('stepPanel' + n).classList.add('visible');
+
+  // Update steps track
+  for (let i = 1; i <= 3; i++) {
+    const stp = document.getElementById('stp' + i);
+    const circ = document.getElementById('stpCircle' + i);
+    stp.classList.remove('active','done','inactive');
+    if (i < n) {
+      stp.classList.add('done');
+      circ.innerHTML = '<svg class="stp-done-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (i === n) {
+      stp.classList.add('active');
+      circ.textContent = i;
+    } else {
+      stp.classList.add('inactive');
+      circ.textContent = i;
+    }
+  }
+
+  // Progress bar
+  const pct = { 1: 33, 2: 66, 3: 100 };
+  document.getElementById('progressFill').style.width = pct[n] + '%';
+
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── CARD LIVE PREVIEW ────────────────────────
+function updateCardName(val) {
+  document.getElementById('cardNameDisplay').textContent = val.toUpperCase() || 'YOUR NAME';
+}
+function updateCardNum(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+  const disp = v.padEnd(16,'•').replace(/(.{4})/g,'$1 ').trim();
+  document.getElementById('cardNumDisplay').textContent = disp;
+  // Detect brand
+  const brand = v.startsWith('4') ? 'VISA' : v.startsWith('5') ? 'MASTERCARD' : v.startsWith('3') ? 'AMEX' : 'LORLUM';
+  document.getElementById('cardBrandDisplay').textContent = brand;
+}
+function updateCardExp(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length >= 3) v = v.substring(0,2) + ' / ' + v.substring(2,4);
+  input.value = v;
+  const raw = input.value.trim();
+  document.getElementById('cardExpDisplay').textContent = raw || 'MM / YY';
+}
+
+// ── PAYMENT METHOD ───────────────────────────
+function selectPM(type) {
+  ['credit','transfer'].forEach(t => {
+    document.getElementById('pm' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === type);
+    document.getElementById(t + 'Form').style.display = t === type ? 'block' : 'none';
+  });
+  // Hide card preview if not credit
+  document.getElementById('cardPreview').style.display = type === 'credit' ? 'block' : 'none';
+}
+
+// ── PROMO ────────────────────────────────────
+function togglePromo() {
+  const body = document.getElementById('promoBody');
+  const toggle = document.getElementById('promoToggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+function applyPromo() {
+  const val = document.getElementById('promoInput').value.trim();
+  if (val) showToast('Promotional code applied');
+}
+
+// ── PLACE ORDER ──────────────────────────────
+function placeOrder() {
+  showToast('Processing your order…');
+  setTimeout(() => {
+    document.getElementById('confirmScreen').style.display = 'block';
+  }, 1400);
+}
+
+// ── TOAST ────────────────────────────────────
+let _tt;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
