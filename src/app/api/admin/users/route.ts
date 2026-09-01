@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { connectDB } from "@/lib/mongodb";
 import { AdminUser, hashPassword } from "@/models/AdminUser";
+import { sendAdminInviteEmail } from "@/lib/email";
 
 const SAFE_FIELDS = "-passwordHash";
 
@@ -39,15 +41,15 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/admin/users  body: { name, email, phone?, role, password, isActive? }
+// POST /api/admin/users  body: { name, email, phone?, role, password?, isActive? }
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
     const body = await req.json();
     const { name, email, phone = "", role = "staff", password, isActive = true } = body;
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "name, email and password are required" }, { status: 400 });
+    if (!name || !email) {
+      return NextResponse.json({ error: "name and email are required" }, { status: 400 });
     }
 
     const exists = await AdminUser.findOne({ email });
@@ -55,10 +57,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email already exists" }, { status: 409 });
     }
 
-    const passwordHash = await hashPassword(password);
-    const user = await AdminUser.create({ name, email, phone, role, password: undefined, passwordHash, isActive });
+    // Use provided password or a random placeholder (user will set via invite link)
+    const plainPassword = password || crypto.randomBytes(16).toString("hex");
+    const passwordHash  = await hashPassword(plainPassword);
 
-    const safe = { ...user.toObject(), passwordHash: undefined };
+    // Generate invite / password-reset token (valid 72 h)
+    const resetToken       = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
+
+    const user = await AdminUser.create({
+      name, email, phone, role, passwordHash, isActive,
+      resetToken, resetTokenExpiry,
+    });
+
+    // Send invite email
+    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+    const link = `${base}/set-password?token=${resetToken}`;
+    try {
+      await sendAdminInviteEmail(email, name, link, role);
+    } catch (mailErr) {
+      console.error("[invite email]", mailErr);
+      // Don't fail the creation — just log
+    }
+
+    const safe = { ...user.toObject(), passwordHash: undefined, resetToken: undefined, resetTokenExpiry: undefined };
     return NextResponse.json(safe, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/users]", err);

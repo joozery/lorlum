@@ -12,6 +12,8 @@ export interface IAdminUser {
   avatarUrl?: string;
   isActive: boolean;
   passwordHash: string;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -24,9 +26,11 @@ const AdminUserSchema = new Schema<IAdminUser>(
     phone:        { type: String, default: "" },
     role:         { type: String, enum: ["super_admin", "admin", "manager", "staff"], default: "staff" },
     avatarUrl:    { type: String, default: "" },
-    isActive:     { type: Boolean, default: true },
-    passwordHash: { type: String, required: true },
-    lastLoginAt:  { type: Date },
+    isActive:          { type: Boolean, default: true },
+    passwordHash:      { type: String, required: true },
+    resetToken:        { type: String, select: false },
+    resetTokenExpiry:  { type: Date,   select: false },
+    lastLoginAt:       { type: Date },
   },
   { timestamps: true }
 );

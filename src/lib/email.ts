@@ -187,6 +187,78 @@ export async function sendOrderConfirmationEmail(params: OrderConfirmParams) {
   return { ok: true };
 }
 
+function adminInviteTemplate(name: string, link: string, role: string) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F3EE;font-family:Georgia,serif">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#FAF9F6;border:1px solid rgba(201,167,82,0.25);max-width:520px;width:100%">
+
+        <!-- Header -->
+        <tr><td style="padding:40px 40px 28px;border-bottom:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 20px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM · Admin</p>
+          <h1 style="margin:0 0 10px;font-size:28px;font-weight:400;color:#2C1F0F;line-height:1.2">You're Invited</h1>
+          <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:13px;color:#8A7B6E;line-height:1.8">
+            สวัสดีคุณ <strong style="color:#2C1F0F">${name}</strong> — บัญชีผู้ดูแลระบบของคุณถูกสร้างแล้วในระดับ <strong style="color:#2C1F0F">${role}</strong>
+          </p>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="padding:36px 40px;text-align:center">
+          <p style="margin:0 0 6px;font-family:'Helvetica Neue',sans-serif;font-size:12px;color:#8A7B6E">
+            กดปุ่มด้านล่างเพื่อตั้งรหัสผ่านของคุณและเริ่มใช้งาน
+          </p>
+          <p style="margin:0 0 28px;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#B5A898">
+            ลิงก์นี้มีอายุ <strong>72 ชั่วโมง</strong>
+          </p>
+          <a href="${link}" style="display:inline-block;background:#2C1F0F;color:#C9A752;font-family:'Helvetica Neue',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;text-decoration:none;padding:16px 40px">
+            ตั้งรหัสผ่าน
+          </a>
+        </td></tr>
+
+        <!-- Link fallback -->
+        <tr><td style="padding:0 40px 32px">
+          <div style="background:#F5F3EE;border:1px solid rgba(201,167,82,0.15);padding:14px 18px">
+            <p style="margin:0 0 4px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">หรือเปิด URL นี้</p>
+            <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#C9A752;word-break:break-all">${link}</p>
+          </div>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:20px 40px;border-top:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 4px;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#8A7B6E;line-height:1.7">
+            หากคุณไม่ได้ร้องขอสิ่งนี้ กรุณาเพิกเฉยต่ออีเมลนี้
+          </p>
+          <hr style="border:none;border-top:1px solid rgba(201,167,82,0.1);margin:14px 0">
+          <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:10px;color:#C9B89A;letter-spacing:0.1em">
+            © LORLUM Maison · Luxury Footwear
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendAdminInviteEmail(to: string, name: string, link: string, role: string) {
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_your_api_key_here") {
+    console.log(`\n📧 [EMAIL DEV] Admin invite to: ${to} | Link: ${link}\n`);
+    return { ok: true, dev: true };
+  }
+  const { error } = await resend.emails.send({
+    from:    FROM,
+    to,
+    subject: "คุณได้รับเชิญเป็นผู้ดูแลระบบ LORLUM",
+    html:    adminInviteTemplate(name, link, role),
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
 export async function sendOtpEmail(
   to:      string,
   otp:     string,

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   ShieldCheck, UserCheck, UserX, Users,
   Search, Plus, Edit2, Trash2, MoreHorizontal,
-  KeyRound, Eye, EyeOff,
+  KeyRound, Eye, EyeOff, Mail,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { StatsCard } from "@/components/shared/stats-card";
@@ -143,10 +143,7 @@ export default function AdminUsersPage() {
       setFormError("กรุณากรอกชื่อและอีเมล");
       return;
     }
-    if (!editing && !form.password) {
-      setFormError("กรุณาตั้งรหัสผ่าน");
-      return;
-    }
+    // password is optional when creating — invite email will be sent
     if (form.password && form.password !== form.confirmPassword) {
       setFormError("รหัสผ่านไม่ตรงกัน");
       return;
@@ -492,13 +489,22 @@ export default function AdminUsersPage() {
               <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-4 space-y-3 flex-1">
                 <p className="text-xs text-gray-500 flex items-center gap-1.5">
                   <KeyRound className="h-3.5 w-3.5 shrink-0" />
-                  {editing ? "เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน" : "ตั้งรหัสผ่านสำหรับบัญชีนี้"}
+                  {editing ? "เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน" : "ไม่บังคับ — ระบบจะส่งลิงก์ตั้งรหัสทางอีเมล"}
                 </p>
+
+                {!editing && (
+                  <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2.5">
+                    <Mail className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-blue-700 leading-relaxed">
+                      ระบบจะส่งอีเมลเชิญให้ผู้ดูแลใหม่ <strong>ตั้งรหัสผ่านของตัวเองอัตโนมัติ</strong> — ลิงก์มีอายุ 72 ชั่วโมง
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">
-                    {editing ? "รหัสผ่านใหม่" : "รหัสผ่าน"}{" "}
-                    {!editing && <span className="text-red-500">*</span>}
+                    {editing ? "รหัสผ่านใหม่" : "รหัสผ่านเริ่มต้น"}{" "}
+                    {!editing && <span className="text-gray-400 font-normal">(ไม่บังคับ)</span>}
                   </Label>
                   <div className="relative">
                     <Input
@@ -521,7 +527,7 @@ export default function AdminUsersPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">
                     ยืนยันรหัสผ่าน{" "}
-                    {!editing && <span className="text-red-500">*</span>}
+                    {!editing && <span className="text-gray-400 font-normal">(ไม่บังคับ)</span>}
                   </Label>
                   <Input
                     type={showPass ? "text" : "password"}
