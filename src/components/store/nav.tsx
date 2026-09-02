@@ -52,7 +52,7 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
 
         {/* Right links — desktop */}
         <ul className="hidden md:flex gap-7 list-none items-center">
-          <li><a href="/#contact" className={linkClass()}>{t.navContact}</a></li>
+          <li><Link href="/contact" className={linkClass("contact")}>{t.navContact}</Link></li>
           <li>
             <Link href={loggedIn ? "/account/profile" : "/account"}
               className={`flex items-center gap-1.5 ${linkClass()}`}
@@ -103,7 +103,7 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
         <Link href="/"            className={mobileLink("home")}       onClick={() => setMenuOpen(false)}>{t.navMaison}</Link>
         <Link href="/collection" className={mobileLink("collection")} onClick={() => setMenuOpen(false)}>{t.navCollection}</Link>
         <a    href="#atelier"          className={mobileLink()}             onClick={() => setMenuOpen(false)}>{t.navAtelier}</a>
-        <a href="/#contact" className={mobileLink()} onClick={() => setMenuOpen(false)}>{t.navContact}</a>
+        <Link href="/contact" className={mobileLink("contact")} onClick={() => setMenuOpen(false)}>{t.navContact}</Link>
         <Link href="/account"    className={mobileLink()}             onClick={() => setMenuOpen(false)}>{t.navAccount}</Link>
         <Link href="/cart"       className={mobileLink("cart")}       onClick={() => setMenuOpen(false)}>{t.navCart} ({cartCount})</Link>
       </div>
