@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
+import { useStoreLang } from "@/contexts/store-language-context";
+import ST from "@/lib/store-translations";
 
 interface ProductItem {
   _id: string;
@@ -88,6 +90,8 @@ function SectionLabel({ label }: { label: string }) {
 }
 
 export default function CollectionPage() {
+  const { lang } = useStoreLang();
+  const t = ST[lang];
   const [products, setProducts]     = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [activeFilter, setActiveFilter] = useState("all");
@@ -108,7 +112,7 @@ export default function CollectionPage() {
 
   const filters = useMemo(() => {
     const cats = categories.filter((c) => usedCategoryNames.has(c.name));
-    return [{ id: "all", label: "All Pieces" }, ...cats.map((c) => ({ id: c.name, label: c.nameEn || c.name }))];
+    return [{ id: "all", label: t.colFilterAll }, ...cats.map((c) => ({ id: c.name, label: c.nameEn || c.name }))];
   }, [categories, usedCategoryNames]);
 
   // Filtered products for count display
@@ -142,13 +146,13 @@ export default function CollectionPage() {
       <div className="pt-[68px] bg-cream text-center border-b border-gold/[0.15] relative overflow-hidden">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] pointer-events-none" style={{ background:"radial-gradient(ellipse,rgba(201,167,82,0.09) 0%,transparent 72%)" }} />
         <div className="px-5 md:px-[52px] py-16 md:py-20 relative z-[1]">
-          <span className="block text-[9px] tracking-[0.6em] uppercase text-gold mb-5">Saison 2026 · Exclusive Release</span>
+          <span className="block text-[9px] tracking-[0.6em] uppercase text-gold mb-5">{t.colHeroEye}</span>
           <h1 className="font-cormorant font-light uppercase text-oak-d leading-[0.95] mb-7" style={{ fontSize:"clamp(52px,6vw,82px)" }}>
-            The&nbsp;<em className="italic text-oak">Full</em><br/>Collection
+            {t.colTitle1 && <>{t.colTitle1}&nbsp;</>}<em className="italic text-oak">{t.colTitle2}</em><br/>{t.colTitle3}
           </h1>
           <div className="w-[34px] h-px bg-gold mx-auto mb-7" />
           <p className="font-light text-[13.5px] tracking-[0.07em] text-muted leading-[1.9] max-w-[440px] mx-auto">
-            Each piece shaped by the finest materials the earth offers — and the unhurried hands that understand them.
+            {t.colDesc}
           </p>
         </div>
       </div>
@@ -170,7 +174,7 @@ export default function CollectionPage() {
           ))}
         </ul>
         <span className="text-[10px] font-light tracking-[0.14em] text-muted whitespace-nowrap">
-          <strong className="font-medium text-gold">{visibleProducts.length}</strong>&nbsp;pieces
+          <strong className="font-medium text-gold">{visibleProducts.length}</strong>&nbsp;{t.colPieces}
         </span>
       </div>
 
