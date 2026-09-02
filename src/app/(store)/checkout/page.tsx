@@ -65,7 +65,7 @@ function StripePayForm({
   return (
     <div className="space-y-6">
       <div className="p-5 bg-cream border border-gold/[0.15]">
-        <PaymentElement options={{ layout: "tabs" }} />
+        <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card", "promptpay"] }} />
       </div>
       <button
         onClick={handlePay}

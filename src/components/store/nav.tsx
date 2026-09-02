@@ -43,7 +43,7 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
         </ul>
 
         {/* Logo */}
-        <Link href="/" className="font-cormorant font-normal text-[26px] md:text-[30px] tracking-[0.06em] text-oak-d no-underline text-center leading-none">
+        <Link href="/" className="font-cormorant font-normal text-[26px] md:text-[30px] tracking-[0.06em] text-oak-d no-underline text-center leading-none absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
           LORLUM
           <small className="block font-jost text-[7px] font-normal tracking-[0.6em] text-gold mt-[3px]">
             {t.footerTagline}
