@@ -13,6 +13,7 @@ const ADMIN_ONLY = [
   "/storefront",
   "/categories",
   "/admin",
+  "/finance",
 ];
 
 function isAdminRoute(pathname: string): boolean {

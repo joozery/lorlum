@@ -7,6 +7,7 @@ const T = {
     sWarehouse:      "WAREHOUSE",
     sStorefront:     "STOREFRONT",
     sAdministration: "ADMINISTRATION",
+    sFinance:        "FINANCE",
     // Nav labels
     dashboard:       "แดชบอร์ด",
     products:        "สินค้า",
@@ -21,6 +22,8 @@ const T = {
     purchases:       "จัดซื้อ",
     storefront:      "หน้าร้าน",
     banner:          "แบนเนอร์",
+    financeOverview: "สรุป P&L",
+    expenses:        "รายจ่าย",
     adminUsers:      "ผู้ดูแลระบบ",
     roles:           "สิทธิ์การใช้งาน",
     settings:        "ตั้งค่า",
@@ -42,6 +45,7 @@ const T = {
     sWarehouse:      "WAREHOUSE",
     sStorefront:     "STOREFRONT",
     sAdministration: "ADMINISTRATION",
+    sFinance:        "FINANCE",
     // Nav labels
     dashboard:       "Dashboard",
     products:        "Products",
@@ -56,6 +60,8 @@ const T = {
     purchases:       "Purchasing",
     storefront:      "Storefront",
     banner:          "Banner",
+    financeOverview: "P&L Summary",
+    expenses:        "Expenses",
     adminUsers:      "Admin Users",
     roles:           "Roles & Permissions",
     settings:        "Settings",

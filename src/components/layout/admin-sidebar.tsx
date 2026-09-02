@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Package, FolderOpen,
   ShoppingCart, CreditCard, Users, Globe, ShieldCheck,
   Lock, Settings, ChevronRight, ChevronLeft, X,
-  LogOut, Warehouse, ShoppingBag,
+  LogOut, Warehouse, ShoppingBag, TrendingUp,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import T, { Translations } from "@/lib/translations";
@@ -85,6 +85,18 @@ function buildNAV(t: Translations): Section[] {
             { id: "sf-hero",    label: "Hero Section",    href: "/storefront/hero" },
             { id: "sf-contact", label: "Contact & Inbox",  href: "/storefront/contact" },
             { id: "sf-legal",   label: "Legal & Cookies",  href: "/storefront/legal" },
+          ],
+        },
+      ],
+    },
+    {
+      title: t.sFinance,
+      items: [
+        {
+          id: "finance", label: t.financeOverview, href: "/finance", icon: TrendingUp,
+          children: [
+            { id: "fi-pl",       label: t.financeOverview, href: "/finance" },
+            { id: "fi-expenses", label: t.expenses,         href: "/finance/expenses" },
           ],
         },
       ],
