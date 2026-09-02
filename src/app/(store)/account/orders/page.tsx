@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
+import { useStoreLang } from "@/contexts/store-language-context";
+import ST from "@/lib/store-translations";
 
 interface OrderItem { productName: string; imageUrl: string; color: string; size: number; price: number; qty: number }
 interface Order {
@@ -12,10 +14,6 @@ interface Order {
   paymentStatus: string; trackingNumber: string; createdAt: string;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "รอดำเนินการ", confirmed: "ยืนยันแล้ว", processing: "กำลังเตรียม",
-  shipped: "จัดส่งแล้ว", delivered: "ได้รับแล้ว", cancelled: "ยกเลิก", refunded: "คืนเงินแล้ว",
-};
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700", confirmed: "bg-blue-100 text-blue-700",
   processing: "bg-violet-100 text-violet-700", shipped: "bg-indigo-100 text-indigo-700",
@@ -23,14 +21,27 @@ const STATUS_COLOR: Record<string, string> = {
   refunded: "bg-gray-100 text-gray-600",
 };
 
-const NAV = [
-  { href: "/account/profile",  label: "Profile" },
-  { href: "/account/orders",   label: "Orders" },
-  { href: "/account/wishlist", label: "Wishlist" },
-];
-
 export default function OrdersPage() {
   const router = useRouter();
+  const { lang } = useStoreLang();
+  const t = ST[lang];
+
+  const NAV = [
+    { href: "/account/profile",  label: t.profNavProfile },
+    { href: "/account/orders",   label: t.profNavOrders },
+    { href: "/account/wishlist", label: t.profNavWishlist },
+  ];
+
+  const STATUS_LABEL: Record<string, string> = {
+    pending:    t.statusPending,
+    confirmed:  t.statusConfirmed,
+    processing: t.statusProcessing,
+    shipped:    t.statusShipped,
+    delivered:  t.statusDelivered,
+    cancelled:  t.statusCancelled,
+    refunded:   t.statusRefunded,
+  };
+
   const [orders,  setOrders]  = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,8 +58,8 @@ export default function OrdersPage() {
 
       <div className="max-w-[900px] mx-auto px-5 md:px-8 pt-28 pb-24">
         <div className="mb-10">
-          <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-2">My Account</span>
-          <h1 className="font-cormorant text-[32px] font-normal text-espresso">Order History</h1>
+          <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-2">{t.myAccount}</span>
+          <h1 className="font-cormorant text-[32px] font-normal text-espresso">{t.orderHistory}</h1>
         </div>
 
         <div className="flex gap-0 border-b border-gold/20 mb-10">
@@ -65,13 +76,13 @@ export default function OrdersPage() {
         </div>
 
         {loading ? (
-          <p className="text-[11px] tracking-[0.2em] uppercase text-muted text-center py-20">Loading...</p>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-muted text-center py-20">{t.loadingLabel}</p>
         ) : orders.length === 0 ? (
           <div className="text-center py-24 space-y-4">
-            <p className="font-cormorant text-[28px] text-espresso">No orders yet</p>
-            <p className="text-xs text-muted">ยังไม่มีคำสั่งซื้อ</p>
+            <p className="font-cormorant text-[28px] text-espresso">{t.noOrders}</p>
+            <p className="text-xs text-muted">{t.noOrdersDesc}</p>
             <Link href="/collection" className="inline-block mt-4 px-8 py-3 bg-espresso text-gold-lt font-jost text-[9px] tracking-[0.3em] uppercase no-underline">
-              Shop Now
+              {t.shopNow}
             </Link>
           </div>
         ) : (
@@ -84,7 +95,7 @@ export default function OrdersPage() {
                       Order #{order.orderNumber || order._id.slice(-8).toUpperCase()}
                     </p>
                     <p className="text-xs text-muted">
-                      {new Date(order.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" })}
+                      {new Date(order.createdAt).toLocaleDateString(lang === "th" ? "th-TH" : "en-GB", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -93,7 +104,7 @@ export default function OrdersPage() {
                     </span>
                     {order.trackingNumber && (
                       <span className="text-[9px] tracking-[0.15em] uppercase text-muted border border-gold/20 px-2.5 py-1">
-                        Track: {order.trackingNumber}
+                        {t.trackLabel}: {order.trackingNumber}
                       </span>
                     )}
                   </div>
@@ -119,12 +130,12 @@ export default function OrdersPage() {
                     </div>
                   ))}
                   {order.items.length > 3 && (
-                    <p className="text-[10px] text-muted pl-13">+{order.items.length - 3} more items</p>
+                    <p className="text-[10px] text-muted pl-13">+{order.items.length - 3} {t.moreItems}</p>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-gold/10">
-                  <p className="text-[10px] tracking-[0.15em] uppercase text-muted">Total</p>
+                  <p className="text-[10px] tracking-[0.15em] uppercase text-muted">{t.total}</p>
                   <p className="font-cormorant text-[20px] text-espresso">฿{order.total.toLocaleString()}</p>
                 </div>
               </div>

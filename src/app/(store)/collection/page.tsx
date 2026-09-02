@@ -31,6 +31,9 @@ interface CategoryItem {
 const fmt = (n: number) => "฿" + n.toLocaleString("th-TH");
 
 function ProductCard({ product }: { product: ProductItem }) {
+  const { lang } = useStoreLang();
+  const t = ST[lang];
+
   const firstImage =
     product.colorVariants?.find((v) => v.images?.[0])?.images[0] ??
     product.imageUrl ??
@@ -55,10 +58,10 @@ function ProductCard({ product }: { product: ProductItem }) {
             </div>
           )}
           {product.featured && (
-            <span className="absolute top-3 left-3 z-[4] text-[8px] tracking-[0.22em] uppercase bg-gold text-espresso px-3 py-1">New</span>
+            <span className="absolute top-3 left-3 z-[4] text-[8px] tracking-[0.22em] uppercase bg-gold text-espresso px-3 py-1">{t.badgeNew}</span>
           )}
           <span className="p-quick absolute bottom-3.5 right-3.5 z-[4] opacity-0 translate-y-1.5 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 text-[8.5px] tracking-[0.2em] uppercase text-oak-d bg-ivory/90 px-4 py-2 border border-gold/30 backdrop-blur-sm whitespace-nowrap">
-            Quick View
+            {t.quickView}
           </span>
         </div>
         <div className="px-5 pt-5 pb-6 border-t border-gold/10">
@@ -183,12 +186,12 @@ export default function CollectionPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-28 text-[11px] tracking-[0.3em] uppercase text-muted">
-            Loading Collection…
+            {t.collLoading}
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-28">
-            <p className="font-cormorant text-[28px] text-muted mb-3">No pieces yet</p>
-            <p className="text-[11px] tracking-[0.2em] uppercase text-muted/60">ยังไม่มีสินค้าในระบบ</p>
+            <p className="font-cormorant text-[28px] text-muted mb-3">{t.collNoPieces}</p>
+            <p className="text-[11px] tracking-[0.2em] uppercase text-muted/60">{t.collNoPiecesDesc}</p>
           </div>
         ) : (
           sections.map((section, si) => (
@@ -209,7 +212,7 @@ export default function CollectionPage() {
         {!loading && products.length > 0 && (
           <div className="text-center pt-6">
             <button className="inline-block border border-oak-d text-oak-d text-[10px] tracking-[0.3em] uppercase px-10 md:px-[52px] py-4 bg-transparent cursor-pointer transition-all duration-300 hover:bg-oak-d hover:text-gold-lt font-jost">
-              Request Private Preview
+              {t.colRequestBtn}
             </button>
           </div>
         )}

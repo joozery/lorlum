@@ -6,20 +6,25 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
+import { useStoreLang } from "@/contexts/store-language-context";
+import ST from "@/lib/store-translations";
 
 interface WishProduct {
   _id: string; name: string; nameEn: string; price: number; imageUrl: string;
   colorVariants: { images: string[] }[];
 }
 
-const NAV = [
-  { href: "/account/profile",  label: "Profile" },
-  { href: "/account/orders",   label: "Orders" },
-  { href: "/account/wishlist", label: "Wishlist" },
-];
-
 export default function WishlistPage() {
   const router = useRouter();
+  const { lang } = useStoreLang();
+  const t = ST[lang];
+
+  const NAV = [
+    { href: "/account/profile",  label: t.profNavProfile },
+    { href: "/account/orders",   label: t.profNavOrders },
+    { href: "/account/wishlist", label: t.profNavWishlist },
+  ];
+
   const [items,   setItems]   = useState<WishProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,8 +52,8 @@ export default function WishlistPage() {
 
       <div className="max-w-[900px] mx-auto px-5 md:px-8 pt-28 pb-24">
         <div className="mb-10">
-          <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-2">My Account</span>
-          <h1 className="font-cormorant text-[32px] font-normal text-espresso">Wishlist</h1>
+          <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-2">{t.myAccount}</span>
+          <h1 className="font-cormorant text-[32px] font-normal text-espresso">{t.wishlistTitle}</h1>
         </div>
 
         <div className="flex gap-0 border-b border-gold/20 mb-10">
@@ -65,12 +70,12 @@ export default function WishlistPage() {
         </div>
 
         {loading ? (
-          <p className="text-[11px] tracking-[0.2em] uppercase text-muted text-center py-20">Loading...</p>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-muted text-center py-20">{t.loadingLabel}</p>
         ) : items.length === 0 ? (
           <div className="text-center py-24 space-y-4">
-            <p className="font-cormorant text-[28px] text-espresso">Your wishlist is empty</p>
+            <p className="font-cormorant text-[28px] text-espresso">{t.wishlistEmpty}</p>
             <Link href="/collection" className="inline-block mt-4 px-8 py-3 bg-espresso text-gold-lt font-jost text-[9px] tracking-[0.3em] uppercase no-underline">
-              Explore Collection
+              {t.exploreBtn}
             </Link>
           </div>
         ) : (

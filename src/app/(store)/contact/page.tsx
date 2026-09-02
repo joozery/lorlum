@@ -20,12 +20,12 @@ export default function ContactPage() {
   const [first,    setFirst]    = useState("");
   const [last,     setLast]     = useState("");
   const [email,    setEmail]    = useState("");
-  const [code,     setCode]     = useState(t.contactCountryCodes[0]);
+  const [code,     setCode]     = useState<string>(t.contactCountryCodes[0]);
   const [phone,    setPhone]    = useState("");
   const [object,   setObject]   = useState("");
   const [topic,    setTopic]    = useState("");
   const [message,  setMessage]  = useState("");
-  const [fileName, setFileName] = useState(t.contactFileBtn);
+  const [fileName, setFileName] = useState<string>(t.contactFileBtn);
   const [file,     setFile]     = useState<File | null>(null);
   const [privacy,  setPrivacy]  = useState(false);
   const [sent,     setSent]     = useState(false);

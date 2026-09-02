@@ -6,12 +6,16 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
+import { useStoreLang } from "@/contexts/store-language-context";
+import ST from "@/lib/store-translations";
 
 type Mode   = "login" | "register" | "otp-send" | "otp-verify";
 type OtpFor = "login";
 
 export default function AccountPage() {
   const router = useRouter();
+  const { lang } = useStoreLang();
+  const t = ST[lang];
 
   const [mode,        setMode]       = useState<Mode>("login");
   const [email,       setEmail]      = useState("");
@@ -30,8 +34,8 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
   }, [countdown]);
 
   const handleLoginPassword = async () => {
@@ -42,13 +46,13 @@ export default function AccountPage() {
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? "เกิดข้อผิดพลาด"); return; }
+    if (!res.ok) { setError(data.error ?? t.errGeneral); return; }
     router.push("/account/profile");
   };
 
   const handleRegister = async () => {
     setError("");
-    if (password !== confirmPw) { setError("รหัสผ่านไม่ตรงกัน"); return; }
+    if (password !== confirmPw) { setError(t.errPwMismatch); return; }
     setLoading(true);
     const res = await fetch("/api/store/auth/register", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -56,8 +60,7 @@ export default function AccountPage() {
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? "เกิดข้อผิดพลาด"); return; }
-    // needsVerification → go to OTP screen
+    if (!res.ok) { setError(data.error ?? t.errGeneral); return; }
     if (data.needsVerification) {
       setOtp(["","","","","",""]); setCountdown(60);
       setMode("otp-verify");
@@ -75,7 +78,7 @@ export default function AccountPage() {
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? "เกิดข้อผิดพลาด"); return; }
+    if (!res.ok) { setError(data.error ?? t.errGeneral); return; }
     setOtp(["","","","","",""]); setCountdown(60);
     setMode("otp-verify");
     setTimeout(() => otpRefs.current[0]?.focus(), 300);
@@ -84,14 +87,14 @@ export default function AccountPage() {
   const verifyOtp = async () => {
     setError(""); setLoading(true);
     const code = otp.join("");
-    if (code.length < 6) { setError("กรุณากรอก OTP ให้ครบ 6 หลัก"); setLoading(false); return; }
+    if (code.length < 6) { setError(t.otpIncomplete); setLoading(false); return; }
     const res = await fetch("/api/store/auth/verify-otp", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp: code, for: otpFor }),
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? "OTP ไม่ถูกต้อง"); return; }
+    if (!res.ok) { setError(data.error ?? t.otpInvalid); return; }
     router.push("/account/profile");
   };
 
@@ -125,12 +128,12 @@ export default function AccountPage() {
           {/* OTP verify screen */}
           {mode === "otp-verify" && (
             <div>
-              <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-3.5">Verification</span>
-              <h2 className="font-cormorant text-[26px] font-normal text-espresso mb-1.5">One-Time Code</h2>
-              <p className="text-[12px] font-light text-muted mb-4 leading-[1.7]">ส่งรหัส 6 หลักไปยัง</p>
+              <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-3.5">{t.verification}</span>
+              <h2 className="font-cormorant text-[26px] font-normal text-espresso mb-1.5">{t.otpTitle}</h2>
+              <p className="text-[12px] font-light text-muted mb-4 leading-[1.7]">{t.otpDesc}</p>
               <div className="inline-flex items-center gap-1.5 bg-gold/[0.1] border border-gold/20 px-3 py-1 mb-6">
                 <span className="text-[11.5px] font-light text-oak">{email}</span>
-                <button onClick={() => setMode("login")} className="bg-transparent border-none cursor-pointer text-muted text-[10px] uppercase tracking-[0.15em] ml-1 font-jost">Change</button>
+                <button onClick={() => setMode("login")} className="bg-transparent border-none cursor-pointer text-muted text-[10px] uppercase tracking-[0.15em] ml-1 font-jost">{t.otpChange}</button>
               </div>
               <div className="flex justify-center gap-2 mb-3" onPaste={handlePaste}>
                 {otp.map((d, i) => (
@@ -146,13 +149,13 @@ export default function AccountPage() {
               {error && <p className="text-[11px] text-red-500 mb-3">{error}</p>}
               <button onClick={verifyOtp} disabled={loading || otp.join("").length < 6}
                 className="w-full h-[50px] bg-espresso text-gold-lt border-none font-jost text-[9.5px] tracking-[0.35em] uppercase mb-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                {loading ? "กำลังตรวจสอบ..." : "Verify & Enter"}
+                {loading ? t.verifying : t.verifyBtn}
               </button>
               <p className="text-[10px] text-muted text-center">
-                ไม่ได้รับรหัส?{" "}
+                {t.didntReceive}{" "}
                 <span onClick={() => { if (countdown === 0) sendOtp(); }}
                   className={`text-gold border-b border-gold/35 ${countdown > 0 ? "opacity-40 cursor-default" : "cursor-pointer"}`}>
-                  ส่งอีกครั้ง
+                  {t.resendCode}
                 </span>
                 {countdown > 0 && <span className="text-gold"> — {countdown}s</span>}
               </p>
@@ -164,9 +167,9 @@ export default function AccountPage() {
             <div>
               <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-3.5">Passwordless</span>
               <h2 className="font-cormorant text-[26px] font-normal text-espresso mb-1.5">Sign In with OTP</h2>
-              <p className="text-[12px] font-light text-muted mb-8 leading-[1.7]">กรอกอีเมลเพื่อรับรหัส OTP ไม่ต้องจำรหัสผ่าน</p>
+              <p className="text-[12px] font-light text-muted mb-8 leading-[1.7]">{t.otpSendDesc}</p>
               <div className="mb-2">
-                <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">E-mail address</label>
+                <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.emailLabel}</label>
                 <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }}
                   placeholder="yourname@domain.com"
                   className="w-full h-12 border-none border-b border-gold/35 bg-transparent font-jost text-[14px] font-light text-espresso outline-none px-1" />
@@ -175,11 +178,11 @@ export default function AccountPage() {
               <div className="h-5 mb-5" />
               <button onClick={sendOtp} disabled={!isValidEmail || loading}
                 className="w-full h-[50px] bg-espresso text-gold-lt border-none font-jost text-[9.5px] tracking-[0.35em] uppercase mb-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                {loading ? "กำลังส่ง..." : "Send OTP"}
+                {loading ? t.otpSending : "Send OTP"}
               </button>
               <button onClick={() => { setMode("login"); setError(""); }}
                 className="w-full text-[9px] tracking-[0.2em] uppercase text-muted bg-transparent border-none cursor-pointer font-jost">
-                ← กลับไปใช้รหัสผ่าน
+                {t.backToPassword}
               </button>
             </div>
           )}
@@ -192,7 +195,7 @@ export default function AccountPage() {
                   <button key={m} onClick={() => { setMode(m); setError(""); }}
                     className={`flex-1 pb-3 text-[9px] tracking-[0.3em] uppercase font-jost bg-transparent border-none cursor-pointer transition-colors ${mode === m ? "text-espresso border-b-2 border-gold" : "text-muted"}`}
                     style={{ marginBottom: mode === m ? "-1px" : undefined }}>
-                    {m === "login" ? "Sign In" : "Create Account"}
+                    {m === "login" ? t.signInTab : t.createAccountTab}
                   </button>
                 ))}
               </div>
@@ -200,13 +203,13 @@ export default function AccountPage() {
               {mode === "login" && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">E-mail</label>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.emailLabel}</label>
                     <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }}
                       placeholder="yourname@domain.com"
                       className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
                   </div>
                   <div>
-                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">Password</label>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.pwdLabel}</label>
                     <div className="relative">
                       <input type={showPw ? "text" : "password"} value={password}
                         onChange={e => { setPassword(e.target.value); setError(""); }}
@@ -221,18 +224,18 @@ export default function AccountPage() {
                   {error && <p className="text-[11px] text-red-500">{error}</p>}
                   <button onClick={handleLoginPassword} disabled={!isValidEmail || !password || loading}
                     className="w-full h-[50px] bg-espresso text-gold-lt border-none font-jost text-[9.5px] tracking-[0.35em] uppercase cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                    {loading ? "กำลังเข้าสู่ระบบ..." : "Sign In"}
+                    {loading ? t.signingIn : t.signInTab}
                   </button>
 
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-px bg-gold/[0.18]" />
-                    <span className="text-[9px] tracking-[0.2em] uppercase text-muted/50">Or</span>
+                    <span className="text-[9px] tracking-[0.2em] uppercase text-muted/50">{t.orDivider}</span>
                     <div className="flex-1 h-px bg-gold/[0.18]" />
                   </div>
 
                   <button onClick={() => { setMode("otp-send"); setError(""); }}
                     className="w-full h-10 bg-transparent border border-gold/28 text-muted font-jost text-[9px] tracking-[0.28em] uppercase cursor-pointer hover:border-gold/50 transition-colors">
-                    Sign In with OTP (no password)
+                    {t.signinOtp}
                   </button>
                 </div>
               )}
@@ -240,23 +243,23 @@ export default function AccountPage() {
               {mode === "register" && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">Full Name</label>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.fullName}</label>
                     <input type="text" value={name} onChange={e => setName(e.target.value)}
-                      placeholder="Your name"
+                      placeholder={t.fullName}
                       className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
                   </div>
                   <div>
-                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">E-mail</label>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.emailLabel}</label>
                     <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }}
                       placeholder="yourname@domain.com"
                       className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
                   </div>
                   <div>
-                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">Password</label>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.pwdLabel}</label>
                     <div className="relative">
                       <input type={showPw ? "text" : "password"} value={password}
                         onChange={e => { setPassword(e.target.value); setError(""); }}
-                        placeholder="At least 6 characters"
+                        placeholder={lang === "en" ? "At least 6 characters" : "อย่างน้อย 6 ตัวอักษร"}
                         className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1 pr-8" />
                       <button type="button" onClick={() => setShowPw(v => !v)}
                         className="absolute right-1 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-muted">
@@ -265,7 +268,7 @@ export default function AccountPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">Confirm Password</label>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.confirmPwd}</label>
                     <input type={showPw ? "text" : "password"} value={confirmPw}
                       onChange={e => setConfirmPw(e.target.value)}
                       placeholder="••••••••"
@@ -274,16 +277,16 @@ export default function AccountPage() {
                   {error && <p className="text-[11px] text-red-500">{error}</p>}
                   <button onClick={handleRegister} disabled={!isValidEmail || !password || loading}
                     className="w-full h-[50px] bg-espresso text-gold-lt border-none font-jost text-[9.5px] tracking-[0.35em] uppercase cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                    {loading ? "กำลังสร้างบัญชี..." : "Create Account"}
+                    {loading ? t.creatingAccount : t.createAccountTab}
                   </button>
                 </div>
               )}
 
               <p className="text-[10px] text-muted text-center mt-6 leading-[1.8]">
-                By continuing you agree to our{" "}
-                <Link href="/" className="text-gold border-b border-gold/35">Terms</Link>
+                {t.agreeTerms}{" "}
+                <Link href="/" className="text-gold border-b border-gold/35">{t.termsLink}</Link>
                 {" & "}
-                <Link href="/" className="text-gold border-b border-gold/35">Privacy Policy</Link>
+                <Link href="/" className="text-gold border-b border-gold/35">{t.privacyLink}</Link>
               </p>
             </div>
           )}

@@ -7,6 +7,8 @@ import Link from "next/link";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useCart } from "@/context/cart";
+import { useStoreLang } from "@/contexts/store-language-context";
+import ST from "@/lib/store-translations";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 interface ColorVariant { name: string; hex: string; images: string[]; stock: number }
@@ -52,6 +54,8 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { addItem, count } = useCart();
+  const { lang } = useStoreLang();
+  const t = ST[lang];
 
   const [product,      setProduct]      = useState<Product | null>(null);
   const [loading,      setLoading]      = useState(true);
@@ -91,7 +95,7 @@ export default function ProductDetailPage() {
   const handleAddToBag = () => {
     if (!product) return;
     if (product.sizes.length > 0 && !activeSize) {
-      setToast("กรุณาเลือกไซส์ก่อน");
+      setToast(t.toastSelectSize);
       setTimeout(() => setToast(""), 2500);
       return;
     }
@@ -105,7 +109,7 @@ export default function ProductDetailPage() {
       price:       product.price,
       qty,
     });
-    setToast("เพิ่มลงตะกร้าแล้ว ✓");
+    setToast(t.toastAddedBag);
     setTimeout(() => setToast(""), 2500);
   };
 
@@ -114,20 +118,26 @@ export default function ProductDetailPage() {
     router.push("/cart");
   };
 
+  const ACCORD_LABELS = {
+    materials: lang === "en" ? "Materials & Construction" : "วัสดุและการตัดเย็บ",
+    fitSizing: lang === "en" ? "Fit & Sizing"             : "ทรงและไซส์",
+    care:      lang === "en" ? "Care Instructions"        : "การดูแลรักษา",
+  };
+
   // Accordion data from product fields
   const accordions = product ? [
-    product.materials        ? { title: "Materials & Construction", content: product.materials }        : null,
-    product.fitSizing        ? { title: "Fit & Sizing",             content: product.fitSizing }        : null,
-    product.careInstructions ? { title: "Care Instructions",        content: product.careInstructions } : null,
-    { title: "Shipping & Returns",  content: "Complimentary insured EMS within Thailand (2–3 working days). International by DHL Express. Returns accepted within 14 days in unworn condition." },
-    { title: "Bespoke Service",     content: "Every piece may be personalised with a discreet gold monogram. Lead time 3–4 weeks. Contact our Atelier for details." },
+    product.materials        ? { title: ACCORD_LABELS.materials, content: product.materials }        : null,
+    product.fitSizing        ? { title: ACCORD_LABELS.fitSizing, content: product.fitSizing }        : null,
+    product.careInstructions ? { title: ACCORD_LABELS.care,      content: product.careInstructions } : null,
+    { title: t.accordShipping,  content: t.accordShippingBody },
+    { title: t.accordBespoke,   content: t.accordBespokeBody },
   ].filter(Boolean) as { title: string; content: string }[] : [];
 
   // ── Loading / Not found ────────────────────────────────────────────────
   if (loading) return (
     <div className="font-jost bg-ivory min-h-screen flex items-center justify-center">
       <StoreNav active="collection" cartCount={count} />
-      <span className="text-[11px] tracking-[0.3em] uppercase text-muted">Loading…</span>
+      <span className="text-[11px] tracking-[0.3em] uppercase text-muted">{t.loadingLabel}</span>
     </div>
   );
 
@@ -135,8 +145,8 @@ export default function ProductDetailPage() {
     <div className="font-jost bg-ivory min-h-screen">
       <StoreNav active="collection" cartCount={count} />
       <div className="pt-32 text-center space-y-4">
-        <p className="font-cormorant text-[32px] text-oak-d">ไม่พบสินค้า</p>
-        <Link href="/collection" className="text-[10px] tracking-[0.2em] uppercase text-gold underline">← กลับ Collection</Link>
+        <p className="font-cormorant text-[32px] text-oak-d">{t.productNotFound}</p>
+        <Link href="/collection" className="text-[10px] tracking-[0.2em] uppercase text-gold underline">{t.productBack}</Link>
       </div>
       <StoreFooter />
     </div>
@@ -150,9 +160,9 @@ export default function ProductDetailPage() {
       {/* BREADCRUMB */}
       <div className="pt-[60px] md:pt-[68px] bg-cream border-b border-gold/[0.1]">
         <div className="max-w-[1320px] mx-auto px-5 md:px-20 py-4 flex gap-3 items-center text-[9.5px] tracking-[0.16em] uppercase text-muted flex-wrap">
-          <Link href="/" className="hover:text-gold transition-colors">Maison</Link>
+          <Link href="/" className="hover:text-gold transition-colors">{t.navMaison}</Link>
           <span className="text-gold text-[8px]">—</span>
-          <Link href="/collection" className="hover:text-gold transition-colors">Collection</Link>
+          <Link href="/collection" className="hover:text-gold transition-colors">{t.navCollection}</Link>
           <span className="text-gold text-[8px]">—</span>
           <span className="text-oak-d">{product.nameEn || product.name}</span>
         </div>
@@ -206,7 +216,7 @@ export default function ProductDetailPage() {
           {/* Price */}
           <div className="flex items-baseline gap-4 mb-6">
             <span className="font-cormorant font-semibold text-[32px] text-gold">{formatPrice(product.price)}</span>
-            <span className="text-[11px] text-muted font-light tracking-[0.06em]">Incl. VAT</span>
+            <span className="text-[11px] text-muted font-light tracking-[0.06em]">{t.inclVAT}</span>
           </div>
 
           {/* Description */}
@@ -220,7 +230,7 @@ export default function ProductDetailPage() {
           {product.colorVariants.length > 0 && (
             <div className="mb-6">
               <div className="text-[9px] tracking-[0.25em] uppercase text-muted mb-3">
-                Colour &nbsp;·&nbsp; <strong className="text-oak-d font-normal">{activeColor?.name ?? "—"}</strong>
+                {t.colourLabel} &nbsp;·&nbsp; <strong className="text-oak-d font-normal">{activeColor?.name ?? "—"}</strong>
               </div>
               <div className="flex gap-2.5 flex-wrap">
                 {product.colorVariants.map((c) => (
@@ -241,10 +251,10 @@ export default function ProductDetailPage() {
             <div className="mb-7">
               <div className="flex justify-between items-center mb-3">
                 <div className="text-[9px] tracking-[0.25em] uppercase text-muted">
-                  Size &nbsp;·&nbsp; <strong className="text-oak-d font-normal">{activeSize ? `EU ${activeSize}` : "—"}</strong>
+                  {t.sizeLabel} &nbsp;·&nbsp; <strong className="text-oak-d font-normal">{activeSize ? `EU ${activeSize}` : "—"}</strong>
                 </div>
                 <button onClick={() => setSizeModal(true)} className="text-[9px] tracking-[0.18em] uppercase text-muted bg-transparent border-none cursor-pointer border-b border-gold/35 pb-0.5 font-jost">
-                  Size Guide
+                  {t.sizeGuide}
                 </button>
               </div>
               <div className="grid grid-cols-5 gap-2">
@@ -265,17 +275,19 @@ export default function ProductDetailPage() {
 
           {/* Stock badge */}
           {product.stock > 0 && product.stock <= 5 && (
-            <p className="text-[10px] tracking-[0.15em] uppercase text-red-400 mb-4">เหลือเพียง {product.stock} ชิ้น</p>
+            <p className="text-[10px] tracking-[0.15em] uppercase text-red-400 mb-4">
+              {t.lowStock.replace("{n}", String(product.stock))}
+            </p>
           )}
           {product.stock === 0 && (
-            <p className="text-[10px] tracking-[0.15em] uppercase text-muted mb-4">สินค้าหมด</p>
+            <p className="text-[10px] tracking-[0.15em] uppercase text-muted mb-4">{t.outOfStock}</p>
           )}
 
           {/* CTAs */}
           <div className="flex flex-col gap-3 mb-8">
             {/* Qty */}
             <div className="flex items-center gap-3 mb-1">
-              <span className="text-[9px] tracking-[0.2em] uppercase text-muted">Qty</span>
+              <span className="text-[9px] tracking-[0.2em] uppercase text-muted">{t.qtyLabel}</span>
               <div className="flex items-center border border-gold/25 h-9">
                 <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-9 h-full flex items-center justify-center text-muted hover:text-oak-d transition-colors bg-transparent border-none cursor-pointer text-lg">−</button>
                 <span className="w-8 text-center text-sm font-light">{qty}</span>
@@ -287,14 +299,14 @@ export default function ProductDetailPage() {
               disabled={product.stock === 0}
               className="w-full h-[50px] bg-gold text-espresso text-[9.5px] font-medium tracking-[0.3em] uppercase cursor-pointer border-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(201,167,82,0.3)] font-jost disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              Add to Bag
+              {t.addToBag}
             </button>
             <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
               className="w-full h-[50px] bg-espresso text-gold-lt text-[9.5px] font-medium tracking-[0.3em] uppercase cursor-pointer border-none transition-all duration-300 hover:opacity-90 font-jost disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Buy Now
+              {t.buyNow}
             </button>
           </div>
 
@@ -302,8 +314,8 @@ export default function ProductDetailPage() {
           <div className="flex gap-3 p-4 bg-gold/[0.06] border border-gold/[0.15] mb-7">
             <span className="text-base">📦</span>
             <div>
-              <p className="text-[10px] font-normal tracking-[0.12em] uppercase text-oak-d mb-1">Complimentary Insured Delivery</p>
-              <p className="text-[11px] font-light text-muted leading-[1.7]">EMS within Thailand — arrives 2–3 working days. International by DHL Express.</p>
+              <p className="text-[10px] font-normal tracking-[0.12em] uppercase text-oak-d mb-1">{t.deliveryTitle}</p>
+              <p className="text-[11px] font-light text-muted leading-[1.7]">{t.deliveryDesc}</p>
             </div>
           </div>
 
@@ -337,12 +349,12 @@ export default function ProductDetailPage() {
         <div onClick={() => setSizeModal(false)} className="fixed inset-0 z-[9999] bg-espresso/60 flex items-center justify-center backdrop-blur-sm">
           <div onClick={(e) => e.stopPropagation()} className="bg-cream border border-gold/20 max-w-[540px] w-[90%] p-8 md:p-11 relative">
             <button onClick={() => setSizeModal(false)} className="absolute top-4 right-5 bg-transparent border-none cursor-pointer text-xl text-muted">×</button>
-            <span className="block text-[9px] tracking-[0.6em] uppercase text-gold mb-3">Size Guide</span>
-            <h3 className="font-cormorant font-normal text-[28px] text-oak-d mb-6">Finding Your Size</h3>
+            <span className="block text-[9px] tracking-[0.6em] uppercase text-gold mb-3">{t.sizeGuideEye}</span>
+            <h3 className="font-cormorant font-normal text-[28px] text-oak-d mb-6">{t.sizeGuideFinding}</h3>
             <table className="w-full border-collapse text-[12px] text-ltext">
               <thead>
                 <tr className="border-b border-gold/20">
-                  {["EU","UK","US","Foot Length (cm)"].map((h) => (
+                  {["EU","UK","US", t.footLengthHeader].map((h) => (
                     <th key={h} className="py-2.5 px-3 text-left text-[9px] tracking-[0.2em] uppercase text-gold font-normal">{h}</th>
                   ))}
                 </tr>
@@ -367,10 +379,10 @@ export default function ProductDetailPage() {
       {toast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] bg-espresso text-gold-lt px-7 py-3 text-[11px] tracking-[0.18em] uppercase border border-gold/20 flex items-center gap-3">
           {toast}
-          {toast.includes("✓") && (
+          {toast === t.toastAddedBag && (
             <button onClick={() => router.push("/cart")}
               className="text-gold text-[9px] tracking-[0.15em] uppercase border-b border-gold/50 bg-transparent cursor-pointer font-jost">
-              ดูตะกร้า →
+              {t.toastViewBag}
             </button>
           )}
         </div>
