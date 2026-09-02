@@ -19,10 +19,10 @@ export function StoreFooter() {
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2">
           {[
-            { href: "/",        label: "Home" },
-            { href: "/collection", label: "Collection" },
-            { href: "/account", label: "My Account" },
-            { href: "/cart",    label: "Cart" },
+            { href: "/",           label: t.footerHome },
+            { href: "/collection", label: t.navCollection },
+            { href: "/account",    label: t.footerAccount },
+            { href: "/cart",       label: t.navCart },
           ].map(l => (
             <Link key={l.href} href={l.href}
               className="text-[9px] tracking-[0.2em] uppercase text-muted hover:text-gold transition-colors no-underline font-jost">
@@ -35,9 +35,9 @@ export function StoreFooter() {
         <span className="text-[9px] font-light tracking-[0.12em] text-muted/60">{t.footerCopy}</span>
         <div className="flex gap-5">
           {[
-            { href: "/terms",   label: "เงื่อนไขการให้บริการ" },
-            { href: "/privacy", label: "ความเป็นส่วนตัว" },
-            { href: "/cookies", label: "คุกกี้" },
+            { href: "/terms",   label: t.footerTerms },
+            { href: "/privacy", label: t.footerPrivacy },
+            { href: "/cookies", label: t.footerCookies },
           ].map(l => (
             <Link key={l.href} href={l.href}
               className="text-[8.5px] tracking-[0.15em] uppercase text-muted/50 hover:text-gold transition-colors no-underline font-jost">

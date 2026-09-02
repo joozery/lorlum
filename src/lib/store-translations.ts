@@ -12,6 +12,11 @@ const ST = {
     // ── Footer ────────────────────────────────────────────────────────────────
     footerTagline:  "Luxury Linen Atelier",
     footerCopy:     "© 2026 LORLUM. All rights reserved.",
+    footerHome:     "Home",
+    footerAccount:  "My Account",
+    footerTerms:    "Terms of Service",
+    footerPrivacy:  "Privacy Policy",
+    footerCookies:  "Cookies",
 
     // ── Hero ──────────────────────────────────────────────────────────────────
     heroSeason:     "Season 2026 · Exclusive Release",
@@ -345,6 +350,11 @@ const ST = {
     // ── Footer ────────────────────────────────────────────────────────────────
     footerTagline:  "อาเทลิเยร์ผ้าลินินลักซ์ชัวรี่",
     footerCopy:     "© 2026 LORLUM. สงวนลิขสิทธิ์",
+    footerHome:     "หน้าหลัก",
+    footerAccount:  "บัญชีของฉัน",
+    footerTerms:    "เงื่อนไขการให้บริการ",
+    footerPrivacy:  "ความเป็นส่วนตัว",
+    footerCookies:  "คุกกี้",
 
     // ── Hero ──────────────────────────────────────────────────────────────────
     heroSeason:     "ซีซั่น 2026 · รุ่น Exclusive",
