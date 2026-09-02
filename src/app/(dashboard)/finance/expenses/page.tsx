@@ -7,7 +7,7 @@ import {
   Receipt, Loader2, ChevronLeft, Check,
 } from "lucide-react";
 import Link from "next/link";
-import { EXPENSE_CATEGORIES, ExpenseCategory } from "@/models/Expense";
+import { EXPENSE_CATEGORIES, ExpenseCategory } from "@/lib/expense-categories";
 
 interface ExpenseItem {
   _id: string;
