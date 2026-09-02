@@ -60,8 +60,9 @@ export default function FinancePage() {
     setLoading(true);
     try {
       const res  = await fetch(`/api/finance/summary?from=${range.from}&to=${range.to}`);
+      if (!res.ok) return;
       const data = await res.json();
-      setSummary(data);
+      if (data?.revenue) setSummary(data);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, [range]);

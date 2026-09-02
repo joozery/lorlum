@@ -31,13 +31,13 @@ export async function GET(req: NextRequest) {
     const [revenueAgg, cogsAgg, expensesAgg, expensesByCategory] = await Promise.all([
       // Revenue: sum of paid/completed orders
       Order.aggregate([
-        { $match: { createdAt: dateRange, status: { $in: ["paid", "processing", "shipped", "delivered"] } } },
+        { $match: { createdAt: dateRange, status: { $in: ["confirmed", "processing", "shipped", "delivered"] } } },
         { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
       ]),
       // COGS: sum of purchase costs
       Purchase.aggregate([
         { $match: { createdAt: dateRange } },
-        { $group: { _id: null, total: { $sum: "$totalCost" }, count: { $sum: 1 } } },
+        { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
       ]),
       // Expenses
       Expense.aggregate([
