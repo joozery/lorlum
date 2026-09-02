@@ -1,7 +1,9 @@
 import mongoose, { Schema, model, models } from "mongoose";
-import { EXPENSE_CATEGORIES, ExpenseCategory } from "@/lib/expense-categories";
+import { EXPENSE_CATEGORIES } from "@/lib/expense-categories";
+import type { ExpenseCategory } from "@/lib/expense-categories";
 
-export { EXPENSE_CATEGORIES, ExpenseCategory };
+export { EXPENSE_CATEGORIES };
+export type { ExpenseCategory };
 
 export interface IExpense {
   _id: string;
