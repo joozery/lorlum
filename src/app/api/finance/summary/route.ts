@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Expense } from "@/models/Expense";
 
-// Dynamic import to avoid model registration order issues
 async function getModels() {
-  const [{ Order }, { Purchase }] = await Promise.all([
+  const [orderMod, purchaseMod] = await Promise.all([
     import("@/models/Order"),
     import("@/models/Purchase"),
   ]);
-  return { Order, Purchase };
+  return { Order: orderMod.default, Purchase: purchaseMod.default };
 }
 
 // GET /api/finance/summary?from=2026-01-01&to=2026-12-31&period=month
