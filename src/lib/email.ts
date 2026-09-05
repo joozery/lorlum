@@ -259,6 +259,122 @@ export async function sendAdminInviteEmail(to: string, name: string, link: strin
   return { ok: true };
 }
 
+// ── Access Request ─────────────────────────────────────────────────────────
+
+interface AccessRequestParams {
+  fname:         string;
+  email:         string;
+  location:      string;
+  interest:      string;
+  applicationNo: string;
+}
+
+function accessRequestAdminTemplate(p: AccessRequestParams) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F3EE;font-family:'Helvetica Neue',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#FAF9F6;border:1px solid rgba(201,167,82,0.25);max-width:480px;width:100%">
+        <tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM · Admin</p>
+          <h1 style="margin:0;font-size:22px;font-weight:400;color:#2C1F0F">New Access Request</h1>
+        </td></tr>
+        <tr><td style="padding:28px 40px">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            ${[
+              ["Application No.", p.applicationNo],
+              ["Name",           p.fname],
+              ["Email",          p.email],
+              ["Location",       p.location],
+              ["Interest",       p.interest || "—"],
+            ].map(([label, value]) => `
+            <tr>
+              <td style="padding:8px 0;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8C7355;width:130px;vertical-align:top">${label}</td>
+              <td style="padding:8px 0;font-size:13px;color:#2C1F0F">${value}</td>
+            </tr>`).join("")}
+          </table>
+        </td></tr>
+        <tr><td style="padding:0 40px 36px">
+          <p style="margin:0;font-size:11px;color:#8C7355;line-height:1.7">
+            ดูรายการทั้งหมดได้ที่ Admin Dashboard → Access Requests
+          </p>
+          <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:16px 0">
+          <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function accessRequestConfirmTemplate(p: AccessRequestParams) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F3EE;font-family:'Helvetica Neue',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#FAF9F6;border:1px solid rgba(201,167,82,0.25);max-width:480px;width:100%">
+        <tr><td style="padding:40px 40px 28px;border-bottom:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 20px;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM</p>
+          <h1 style="margin:0 0 8px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#2C1F0F;line-height:1.2">Application Received</h1>
+          <p style="margin:0;font-size:13px;color:#8C7355;line-height:1.7">
+            Dear ${p.fname}, your request for private access has been received.
+          </p>
+        </td></tr>
+        <tr><td style="padding:24px 40px;background:#fff;border-bottom:1px solid rgba(201,167,82,0.1)">
+          <p style="margin:0 0 4px;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8C7355">Application Number</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:0.12em;color:#C9A752">${p.applicationNo}</p>
+        </td></tr>
+        <tr><td style="padding:28px 40px 36px">
+          <p style="margin:0 0 16px;font-size:13px;color:#8C7355;line-height:1.8">
+            Your application has been placed in the Season 2026 allocation queue.
+            Our concierge team will review your details and notify you within
+            <strong style="color:#2C1F0F">5 business days</strong>.
+          </p>
+          <p style="margin:0;font-size:12px;color:#8C7355;line-height:1.8">
+            Please retain your application number for future reference.
+          </p>
+          <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:24px 0">
+          <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison · Luxury Footwear</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendAccessRequestEmails(p: AccessRequestParams) {
+  const ADMIN = process.env.ADMIN_NOTIFY_EMAIL ?? "zerryboy28@gmail.com";
+  const devMode = !process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_your_api_key_here";
+
+  if (devMode) {
+    console.log(`\n📧 [EMAIL DEV] Access request ${p.applicationNo} from ${p.email}\n`);
+    return { ok: true, dev: true };
+  }
+
+  await Promise.all([
+    resend.emails.send({
+      from:    FROM,
+      to:      ADMIN,
+      subject: `New Access Request — ${p.applicationNo} · LORLUM`,
+      html:    accessRequestAdminTemplate(p),
+    }),
+    resend.emails.send({
+      from:    FROM,
+      to:      p.email,
+      subject: `Your Application — ${p.applicationNo} · LORLUM Maison`,
+      html:    accessRequestConfirmTemplate(p),
+    }),
+  ]);
+
+  return { ok: true };
+}
+
 export async function sendOtpEmail(
   to:      string,
   otp:     string,

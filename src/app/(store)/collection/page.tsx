@@ -211,9 +211,9 @@ export default function CollectionPage() {
 
         {!loading && products.length > 0 && (
           <div className="text-center pt-6">
-            <button className="inline-block border border-oak-d text-oak-d text-[10px] tracking-[0.3em] uppercase px-10 md:px-[52px] py-4 bg-transparent cursor-pointer transition-all duration-300 hover:bg-oak-d hover:text-gold-lt font-jost">
+            <Link href="/request-access" className="inline-block border border-oak-d text-oak-d text-[10px] tracking-[0.3em] uppercase px-10 md:px-[52px] py-4 bg-transparent cursor-pointer transition-all duration-300 hover:bg-oak-d hover:text-gold-lt font-jost no-underline">
               {t.colRequestBtn}
-            </button>
+            </Link>
           </div>
         )}
       </div>

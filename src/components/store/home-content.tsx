@@ -255,7 +255,7 @@ export function HomeContent({ products, hero }: { products: ProductCard[]; hero:
           <h2 className="font-cormorant font-light text-oak-d leading-[1.05] mb-9" style={{ fontSize: "clamp(34px,5vw,64px)" }}>
             {t.ctaTitle1}<br /><em className="italic text-oak">{t.ctaTitle2}</em>
           </h2>
-          <Link href="/contact" className="inline-block bg-gold text-espresso text-[10px] font-medium tracking-[0.28em] uppercase px-10 py-[17px] no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(201,167,82,0.35)]">
+          <Link href="/request-access" className="inline-block bg-gold text-espresso text-[10px] font-medium tracking-[0.28em] uppercase px-10 py-[17px] no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(201,167,82,0.35)]">
             {t.ctaBtn}
           </Link>
         </RevealSection>
