@@ -26,10 +26,10 @@ export async function POST(
   if (!order) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
 
   // Get product categories for bespoke items
-  const bespokeItems = order.items.filter((i: { size: unknown }) => i.size === "Bespoke");
+  const bespokeItems = (order.items as unknown as Array<{ productId: unknown; size: unknown; bespokeMeasurements?: unknown }>).filter(i => i.size === "Bespoke");
   if (!bespokeItems.length) return NextResponse.json({ ok: false, error: "No bespoke item found" }, { status: 400 });
 
-  const productIds = bespokeItems.map((i: { productId: unknown }) => i.productId);
+  const productIds = bespokeItems.map(i => i.productId);
   const products = await Product.find({ _id: { $in: productIds } }).select("_id category").lean() as Array<{ _id: unknown; category: string }>;
   const catMap = new Map(products.map(p => [String(p._id), p.category]));
 

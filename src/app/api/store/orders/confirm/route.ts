@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const products = mongoose.connection.collection("products");
 
   await Promise.all(
-    (order.items as Array<{ productId: string; color: string; size: number | null; qty: number }>).map(async (item) => {
+    (order.items as unknown as Array<{ productId: string; color: string; size: number | null; qty: number }>).map(async (item) => {
       const pid = new mongoose.Types.ObjectId(String(item.productId));
       const qty = item.qty ?? 1;
 
