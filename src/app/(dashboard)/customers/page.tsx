@@ -23,6 +23,11 @@ export default function CustomersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  async function handleDelete(id: string) {
+    const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
+    if (res.ok) setCustomers(prev => prev.filter(c => c.id !== id));
+  }
+
   const stats = useMemo(() => {
     if (!customers.length) return { total: 0, vipCount: 0, newMonth: 0, avgSpent: 0 };
     const thisMonth = new Date();
@@ -80,7 +85,7 @@ export default function CustomersPage() {
           </div>
         ) : (
           <>
-            <CustomerTable customers={filtered} onView={setSelected} />
+            <CustomerTable customers={filtered} onView={setSelected} onDelete={handleDelete} />
             <CustomerDetailDialog customer={selected} onClose={() => setSelected(null)} />
           </>
         )}

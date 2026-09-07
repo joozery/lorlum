@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
           { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
         ]),
         Purchase.aggregate([
-          { $match: { createdAt: dateRange } },
+          { $match: { issueDate: dateRange, status: { $in: ["ordered", "received"] } } },
           { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
         ]),
         Expense.aggregate([

@@ -33,14 +33,15 @@ export async function GET(req: NextRequest) {
       customerEmail: cust?.email ?? o.guestEmail ?? "",
       customerPhone: cust?.phone ?? o.shippingAddress?.phone ?? "",
       currency:      "THB",
-      items: (o.items ?? []).map((item: { productId: unknown; productName: string; imageUrl?: string; color?: string; size?: number; price: number; qty: number }) => ({
-        productId:   item.productId,
-        productName: item.productName,
-        imageUrl:    item.imageUrl,
-        color:       item.color,
-        size:        item.size,
-        price:       item.price,
-        quantity:    item.qty,
+      items: (o.items ?? []).map((item: { productId: unknown; productName: string; imageUrl?: string; color?: string; size?: unknown; price: number; qty: number; bespokeMeasurements?: unknown }) => ({
+        productId:           item.productId,
+        productName:         item.productName,
+        imageUrl:            item.imageUrl,
+        color:               item.color,
+        size:                item.size,
+        price:               item.price,
+        quantity:            item.qty,
+        bespokeMeasurements: item.bespokeMeasurements ?? null,
       })),
     };
   });

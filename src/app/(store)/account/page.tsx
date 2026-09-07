@@ -8,9 +8,10 @@ import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useStoreLang } from "@/contexts/store-language-context";
 import ST from "@/lib/store-translations";
+import { maskPhone } from "@/lib/sms";
 
-type Mode   = "login" | "register" | "otp-send" | "otp-verify";
-type OtpFor = "login";
+type Mode       = "login" | "register" | "otp-send" | "otp-verify";
+type OtpChannel = "email" | "sms";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -19,11 +20,12 @@ export default function AccountPage() {
 
   const [mode,        setMode]       = useState<Mode>("login");
   const [email,       setEmail]      = useState("");
+  const [phone,       setPhone]      = useState("");
   const [password,    setPassword]   = useState("");
   const [confirmPw,   setConfirmPw]  = useState("");
   const [name,        setName]       = useState("");
   const [otp,         setOtp]        = useState(["","","","","",""]);
-  const [otpFor]                     = useState<OtpFor>("login");
+  const [otpChannel,  setOtpChannel] = useState<OtpChannel>("email");
   const [showPw,      setShowPw]     = useState(false);
   const [error,       setError]      = useState("");
   const [loading,     setLoading]    = useState(false);
@@ -56,13 +58,14 @@ export default function AccountPage() {
     setLoading(true);
     const res = await fetch("/api/store/auth/register", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, phone, password }),
     });
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error ?? t.errGeneral); return; }
     if (data.needsVerification) {
       setOtp(["","","","","",""]); setCountdown(60);
+      setOtpChannel("sms");
       setMode("otp-verify");
       setTimeout(() => otpRefs.current[0]?.focus(), 300);
     } else {
@@ -80,8 +83,27 @@ export default function AccountPage() {
     setLoading(false);
     if (!res.ok) { setError(data.error ?? t.errGeneral); return; }
     setOtp(["","","","","",""]); setCountdown(60);
+    setOtpChannel("email");
     setMode("otp-verify");
     setTimeout(() => otpRefs.current[0]?.focus(), 300);
+  };
+
+  const resendOtp = async () => {
+    if (countdown > 0) return;
+    if (otpChannel === "sms") {
+      // Re-register to resend SMS OTP
+      setError(""); setLoading(true);
+      const res = await fetch("/api/store/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, password }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) { setError(data.error ?? t.errGeneral); return; }
+      setOtp(["","","","","",""]); setCountdown(60);
+    } else {
+      sendOtp();
+    }
   };
 
   const verifyOtp = async () => {
@@ -90,7 +112,7 @@ export default function AccountPage() {
     if (code.length < 6) { setError(t.otpIncomplete); setLoading(false); return; }
     const res = await fetch("/api/store/auth/verify-otp", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp: code, for: otpFor }),
+      body: JSON.stringify({ email, otp: code, for: "login" }),
     });
     const data = await res.json();
     setLoading(false);
@@ -118,6 +140,9 @@ export default function AccountPage() {
     otpRefs.current[Math.min(digits.length, 5)]?.focus();
   };
 
+  const otpDisplayValue = otpChannel === "sms" ? maskPhone(phone) : email;
+  const otpChangeAction = otpChannel === "sms" ? () => setMode("register") : () => setMode("login");
+
   return (
     <div className="font-jost bg-ivory min-h-screen flex flex-col">
       <StoreNav active="home" cartCount={0} />
@@ -132,8 +157,8 @@ export default function AccountPage() {
               <h2 className="font-cormorant text-[26px] font-normal text-espresso mb-1.5">{t.otpTitle}</h2>
               <p className="text-[12px] font-light text-muted mb-4 leading-[1.7]">{t.otpDesc}</p>
               <div className="inline-flex items-center gap-1.5 bg-gold/[0.1] border border-gold/20 px-3 py-1 mb-6">
-                <span className="text-[11.5px] font-light text-oak">{email}</span>
-                <button onClick={() => setMode("login")} className="bg-transparent border-none cursor-pointer text-muted text-[10px] uppercase tracking-[0.15em] ml-1 font-jost">{t.otpChange}</button>
+                <span className="text-[11.5px] font-light text-oak">{otpDisplayValue}</span>
+                <button onClick={otpChangeAction} className="bg-transparent border-none cursor-pointer text-muted text-[10px] uppercase tracking-[0.15em] ml-1 font-jost">{t.otpChange}</button>
               </div>
               <div className="flex justify-center gap-2 mb-3" onPaste={handlePaste}>
                 {otp.map((d, i) => (
@@ -153,7 +178,7 @@ export default function AccountPage() {
               </button>
               <p className="text-[10px] text-muted text-center">
                 {t.didntReceive}{" "}
-                <span onClick={() => { if (countdown === 0) sendOtp(); }}
+                <span onClick={resendOtp}
                   className={`text-gold border-b border-gold/35 ${countdown > 0 ? "opacity-40 cursor-default" : "cursor-pointer"}`}>
                   {t.resendCode}
                 </span>
@@ -162,7 +187,7 @@ export default function AccountPage() {
             </div>
           )}
 
-          {/* OTP send screen */}
+          {/* OTP send screen (email — passwordless / forgot password) */}
           {mode === "otp-send" && (
             <div>
               <span className="block text-[8px] tracking-[0.5em] uppercase text-gold mb-3.5">Passwordless</span>
@@ -255,6 +280,12 @@ export default function AccountPage() {
                       className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
                   </div>
                   <div>
+                    <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.phoneLabel}</label>
+                    <input type="tel" value={phone} onChange={e => { setPhone(e.target.value); setError(""); }}
+                      placeholder="08X-XXX-XXXX"
+                      className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
+                  </div>
+                  <div>
                     <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.pwdLabel}</label>
                     <div className="relative">
                       <input type={showPw ? "text" : "password"} value={password}
@@ -275,7 +306,7 @@ export default function AccountPage() {
                       className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
                   </div>
                   {error && <p className="text-[11px] text-red-500">{error}</p>}
-                  <button onClick={handleRegister} disabled={!isValidEmail || !password || loading}
+                  <button onClick={handleRegister} disabled={!isValidEmail || !phone || !password || loading}
                     className="w-full h-[50px] bg-espresso text-gold-lt border-none font-jost text-[9.5px] tracking-[0.35em] uppercase cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                     {loading ? t.creatingAccount : t.createAccountTab}
                   </button>

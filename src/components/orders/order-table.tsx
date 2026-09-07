@@ -96,6 +96,16 @@ export function OrderTable({ orders, onView, onUpdateStatus }: OrderTableProps) 
                       <p className="text-xs text-gray-400">+{order.items.length - 1} รายการอื่น</p>
                     )}
                     <p className="text-[11px] text-gray-400">{totalQty} ชิ้น</p>
+                    {order.items.some(i => i.size === "Bespoke") && (
+                      <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        order.items.some(i => i.size === "Bespoke" && !i.bespokeMeasurements)
+                          ? "bg-amber-50 text-amber-600"
+                          : "bg-emerald-50 text-emerald-600"
+                      }`}>
+                        ✂ Bespoke
+                        {order.items.some(i => i.size === "Bespoke" && !i.bespokeMeasurements) && " · รอขนาด"}
+                      </span>
+                    )}
                   </div>
                 </td>
 

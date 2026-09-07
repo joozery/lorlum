@@ -1,13 +1,31 @@
 import mongoose, { Schema, model, models } from "mongoose";
 
+const BespokeMeasurementsSchema = new Schema({
+  garmentType: { type: String, enum: ["shirt", "trousers"], default: "shirt" },
+  // shirt fields
+  chest:    { type: Number },
+  shoulder: { type: Number },
+  sleeve:   { type: Number },
+  // shared
+  waist:    { type: Number },
+  // trouser fields
+  hip:      { type: Number },
+  rise:     { type: Number },
+  thigh:    { type: Number },
+  outseam:  { type: Number },
+  hem:      { type: Number },
+  note:     { type: String, default: "" },
+}, { _id: false });
+
 const OrderItemSchema = new Schema({
-  productId:   { type: Schema.Types.ObjectId, ref: "Product", required: true },
-  productName: { type: String, required: true },
-  imageUrl:    { type: String, default: "" },
-  color:       { type: String, default: "" },
-  size:        { type: Number },
-  price:       { type: Number, required: true },
-  qty:         { type: Number, required: true, min: 1 },
+  productId:           { type: Schema.Types.ObjectId, ref: "Product", required: true },
+  productName:         { type: String, required: true },
+  imageUrl:            { type: String, default: "" },
+  color:               { type: String, default: "" },
+  size:                { type: Schema.Types.Mixed },
+  price:               { type: Number, required: true },
+  qty:                 { type: Number, required: true, min: 1 },
+  bespokeMeasurements: { type: BespokeMeasurementsSchema },
 }, { _id: false });
 
 const OrderSchema = new Schema({
@@ -39,4 +57,8 @@ const OrderSchema = new Schema({
   shippedAt:   { type: Date },
 }, { timestamps: true });
 
-export default models.Order ?? model("Order", OrderSchema);
+if (process.env.NODE_ENV === "development" && models.Order) {
+  mongoose.deleteModel("Order");
+}
+
+export default model("Order", OrderSchema);

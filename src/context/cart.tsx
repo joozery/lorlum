@@ -8,7 +8,7 @@ export interface CartItem {
   imageUrl: string;
   color: string;
   colorHex: string;
-  size: number | null;
+  size: number | string | null;
   price: number;
   qty: number;
 }
@@ -18,8 +18,8 @@ interface CartContextValue {
   count: number;
   subtotal: number;
   addItem: (item: Omit<CartItem, "qty"> & { qty?: number }) => void;
-  removeItem: (productId: string, color: string, size: number | null) => void;
-  updateQty: (productId: string, color: string, size: number | null, qty: number) => void;
+  removeItem: (productId: string, color: string, size: number | string | null) => void;
+  updateQty: (productId: string, color: string, size: number | string | null, qty: number) => void;
   clearCart: () => void;
 }
 
@@ -61,11 +61,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((productId: string, color: string, size: number | null) => {
+  const removeItem = useCallback((productId: string, color: string, size: number | string | null) => {
     setItems((prev) => prev.filter((i) => key(i) !== key({ productId, color, size })));
   }, []);
 
-  const updateQty = useCallback((productId: string, color: string, size: number | null, qty: number) => {
+  const updateQty = useCallback((productId: string, color: string, size: number | string | null, qty: number) => {
     if (qty <= 0) { removeItem(productId, color, size); return; }
     setItems((prev) => prev.map((i) => key(i) === key({ productId, color, size }) ? { ...i, qty } : i));
   }, [removeItem]);

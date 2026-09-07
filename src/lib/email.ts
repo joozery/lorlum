@@ -375,6 +375,127 @@ export async function sendAccessRequestEmails(p: AccessRequestParams) {
   return { ok: true };
 }
 
+// ── Access Approved / Rejected ─────────────────────────────────────────────────
+
+function accessApprovedTemplate(fname: string, applicationNo: string, storeUrl: string) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F3EE;font-family:'Helvetica Neue',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#FAF9F6;border:1px solid rgba(201,167,82,0.25);max-width:480px;width:100%">
+
+        <tr><td style="height:3px;background:linear-gradient(90deg,transparent 0%,#C9A752 40%,#C9A752 60%,transparent 100%)"></td></tr>
+
+        <tr><td style="padding:40px 40px 28px;border-bottom:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 20px;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM · Private Access</p>
+          <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:28px;font-weight:400;color:#2C1F0F;line-height:1.2">You're In.</h1>
+          <p style="margin:0;font-size:13px;color:#8C7355;line-height:1.8">
+            Dear <strong style="color:#2C1F0F">${fname}</strong>,<br>
+            your application for LORLUM Private Preview has been approved.
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:24px 40px;background:#fff;border-bottom:1px solid rgba(201,167,82,0.1)">
+          <p style="margin:0 0 4px;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8C7355">Application Number</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:0.12em;color:#C9A752">${applicationNo}</p>
+        </td></tr>
+
+        <tr><td style="padding:32px 40px;text-align:center">
+          <p style="margin:0 0 6px;font-size:12px;color:#8C7355;line-height:1.8">
+            Create your account to access the private collection.
+          </p>
+          <p style="margin:0 0 28px;font-size:11px;color:#B5A898">
+            Use the same email address as your application.
+          </p>
+          <a href="${storeUrl}/account" style="display:inline-block;background:#2C1F0F;color:#C9A752;font-family:'Helvetica Neue',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;text-decoration:none;padding:16px 44px">
+            Create Account
+          </a>
+        </td></tr>
+
+        <tr><td style="padding:0 40px 36px">
+          <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:0 0 20px">
+          <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison · Luxury Footwear</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function accessRejectedTemplate(fname: string, applicationNo: string) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F3EE;font-family:'Helvetica Neue',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#FAF9F6;border:1px solid rgba(201,167,82,0.25);max-width:480px;width:100%">
+
+        <tr><td style="padding:40px 40px 28px;border-bottom:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 20px;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM</p>
+          <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#2C1F0F;line-height:1.2">Application Update</h1>
+          <p style="margin:0;font-size:13px;color:#8C7355;line-height:1.8">
+            Dear <strong style="color:#2C1F0F">${fname}</strong>
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:24px 40px;background:#fff;border-bottom:1px solid rgba(201,167,82,0.1)">
+          <p style="margin:0 0 4px;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8C7355">Application Number</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:0.12em;color:#C9A752">${applicationNo}</p>
+        </td></tr>
+
+        <tr><td style="padding:28px 40px 36px">
+          <p style="margin:0 0 16px;font-size:13px;color:#8C7355;line-height:1.8">
+            After careful consideration, we are unable to accommodate your request
+            for private access at this time. Our current allocation is fully reserved
+            for the Season 2026 collection.
+          </p>
+          <p style="margin:0 0 16px;font-size:13px;color:#8C7355;line-height:1.8">
+            We appreciate your interest in LORLUM Maison and hope to welcome you
+            in a future season.
+          </p>
+          <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:20px 0">
+          <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison · Luxury Footwear</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendAccessDecisionEmail(
+  to: string,
+  fname: string,
+  applicationNo: string,
+  decision: "approved" | "rejected",
+) {
+  const storeUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+  const devMode  = !process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_your_api_key_here";
+
+  if (devMode) {
+    console.log(`\n📧 [EMAIL DEV] Access ${decision} — To: ${to} | ${applicationNo}\n`);
+    return { ok: true, dev: true };
+  }
+
+  const subject = decision === "approved"
+    ? `You're approved — ${applicationNo} · LORLUM Maison`
+    : `Application update — ${applicationNo} · LORLUM Maison`;
+
+  const html = decision === "approved"
+    ? accessApprovedTemplate(fname, applicationNo, storeUrl)
+    : accessRejectedTemplate(fname, applicationNo);
+
+  const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
 export async function sendOtpEmail(
   to:      string,
   otp:     string,
@@ -395,6 +516,60 @@ export async function sendOtpEmail(
     to,
     subject,
     html:    otpTemplate(otp, purpose),
+  });
+
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+// ── Account Deleted ────────────────────────────────────────────────────────────
+
+function accountDeletedTemplate(name: string) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F3EE;font-family:'Helvetica Neue',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#FAF9F6;border:1px solid rgba(201,167,82,0.25);max-width:480px;width:100%">
+
+        <tr><td style="padding:40px 40px 28px;border-bottom:1px solid rgba(201,167,82,0.15)">
+          <p style="margin:0 0 20px;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM</p>
+          <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:24px;font-weight:400;color:#2C1F0F;line-height:1.3">Account Removed</h1>
+          <p style="margin:0;font-size:13px;color:#8A7B6E;line-height:1.8">
+            สวัสดีคุณ <strong style="color:#2C1F0F">${name}</strong>
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:28px 40px 36px">
+          <p style="margin:0 0 16px;font-size:13px;color:#8A7B6E;line-height:1.8">
+            บัญชีสมาชิกของคุณในระบบ LORLUM Maison ถูกลบออกจากระบบโดยทีมงานแล้ว
+          </p>
+          <p style="margin:0 0 16px;font-size:13px;color:#8A7B6E;line-height:1.8">
+            หากคุณมีข้อสงสัยหรือไม่ได้ร้องขอการเปลี่ยนแปลงนี้ กรุณาติดต่อทีมงานของเราได้ทันที
+          </p>
+          <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:20px 0">
+          <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison · Luxury Footwear</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendAccountDeletedEmail(to: string, name: string) {
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_your_api_key_here") {
+    console.log(`\n📧 [EMAIL DEV] Account deleted — To: ${to} | Name: ${name}\n`);
+    return { ok: true, dev: true };
+  }
+
+  const { error } = await resend.emails.send({
+    from:    FROM,
+    to,
+    subject: "Your LORLUM account has been removed",
+    html:    accountDeletedTemplate(name),
   });
 
   if (error) throw new Error(error.message);

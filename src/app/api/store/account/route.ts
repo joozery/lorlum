@@ -58,7 +58,7 @@ export async function PUT(req: NextRequest) {
       province:  String(body.address.province ?? ""),
       city:      String(body.address.city     ?? ""),
       zip:       String(body.address.zip      ?? ""),
-      country:   "Thailand",
+      country:   String(body.address.country ?? "Thailand"),
       isDefault: true,
     }];
   }

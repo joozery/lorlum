@@ -77,11 +77,32 @@ export interface Order {
   createdAt: string;
 }
 
+export interface BespokeMeasurements {
+  garmentType?: "shirt" | "trousers";
+  // shirt
+  chest?: number;
+  shoulder?: number;
+  sleeve?: number;
+  // shared
+  waist?: number;
+  // trousers
+  hip?: number;
+  rise?: number;
+  thigh?: number;
+  outseam?: number;
+  hem?: number;
+  note?: string;
+}
+
 export interface OrderItem {
   productId: string;
   productName: string;
   quantity: number;
   price: number;
+  color?: string;
+  size?: number | string | null;
+  imageUrl?: string;
+  bespokeMeasurements?: BespokeMeasurements | null;
 }
 
 export type CustomerTier = "vip" | "regular" | "new";

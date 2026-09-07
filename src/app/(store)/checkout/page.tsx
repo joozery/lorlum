@@ -8,6 +8,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { useCart } from "@/context/cart";
 import { useStoreLang } from "@/contexts/store-language-context";
 import ST from "@/lib/store-translations";
+import { COUNTRIES } from "@/lib/countries";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -18,16 +19,17 @@ interface ContactInfo {
   firstName: string; lastName: string; email: string; phone: string; note: string;
 }
 interface ShippingInfo {
-  line1: string; line2: string; city: string; province: string; zip: string;
+  line1: string; line2: string; city: string; province: string; zip: string; country: string;
 }
 
 // ── Stripe payment form (rendered inside <Elements>) ──────────────────────
 function StripePayForm({
-  clientSecret, orderId, orderNumber, onSuccess, onError,
+  clientSecret, orderId, orderNumber, hasBespoke, onSuccess, onError,
 }: {
   clientSecret: string;
   orderId: string;
   orderNumber: string;
+  hasBespoke: boolean;
   onSuccess: (num: string) => void;
   onError: (msg: string) => void;
 }) {
@@ -43,7 +45,7 @@ function StripePayForm({
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}`,
+        return_url: `${window.location.origin}/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}${hasBespoke ? "&hasBespoke=1" : ""}`,
       },
       redirect: "if_required",
     });
@@ -92,12 +94,13 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]       = useState("");
+  const [hasBespoke, setHasBespoke] = useState(false);
 
   const [contact, setContact] = useState<ContactInfo>({
     firstName: "", lastName: "", email: "", phone: "", note: "",
   });
   const [shipping, setShipping] = useState<ShippingInfo>({
-    line1: "", line2: "", city: "", province: "", zip: "",
+    line1: "", line2: "", city: "", province: "", zip: "", country: "Thailand",
   });
 
   const fmt = (n: number) => "฿" + n.toLocaleString("th-TH");
@@ -116,7 +119,7 @@ export default function CheckoutPage() {
           phone:     d.phone     || "",
         }));
         const a = d.addresses?.[0];
-        if (a) setShipping({ line1: a.line1 ?? "", line2: a.line2 ?? "", city: a.city ?? "", province: a.province ?? "", zip: a.zip ?? "" });
+        if (a) setShipping({ line1: a.line1 ?? "", line2: a.line2 ?? "", city: a.city ?? "", province: a.province ?? "", zip: a.zip ?? "", country: a.country ?? "Thailand" });
       })
       .catch(() => {});
   }, []);
@@ -170,6 +173,7 @@ export default function CheckoutPage() {
   };
 
   const handleSuccess = (num: string) => {
+    setHasBespoke(items.some(i => i.size === "Bespoke"));
     clearCart();
     setOrderNumber(num);
     setStep(4);
@@ -184,6 +188,22 @@ export default function CheckoutPage() {
           <h2 className="font-cormorant font-normal text-[34px] text-oak-d mb-3 tracking-[0.04em]">{t.doneTitle}</h2>
           <p className="text-[11px] tracking-[0.25em] uppercase text-gold mb-4">{orderNumber}</p>
           <p className="text-[13px] font-light text-muted leading-[1.8] mb-9">{t.doneDesc}</p>
+
+          {hasBespoke && (
+            <div className="mb-8 px-6 py-5 bg-gold/[0.07] border border-gold/25">
+              <p className="text-[9px] tracking-[0.4em] uppercase text-gold mb-2">Bespoke Order</p>
+              <p className="text-[12px] font-light text-muted leading-[1.8] mb-4">
+                ออเดอร์นี้มีรายการ Bespoke — กรุณากรอกขนาดตัวเพื่อให้ทีมงานดำเนินการตัดเย็บ
+              </p>
+              <Link
+                href={`/account/orders/${orderId}/bespoke`}
+                className="inline-block bg-gold text-espresso text-[9px] font-semibold tracking-[0.25em] uppercase px-7 py-3 no-underline hover:opacity-90 transition-opacity"
+              >
+                กรอกขนาด Bespoke →
+              </Link>
+            </div>
+          )}
+
           <div className="flex gap-3 justify-center">
             <Link href="/account/orders" className="inline-block bg-espresso text-gold-lt text-[9.5px] font-medium tracking-[0.28em] uppercase px-8 py-[17px] no-underline">
               {t.viewOrders}
@@ -338,7 +358,15 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <label className={labelCls}>{t.addrCountry}</label>
-                  <input className={`${inputCls} text-muted cursor-not-allowed`} type="text" value={t.addrCountryVal} readOnly />
+                  <select
+                    value={shipping.country}
+                    onChange={e => setShipping(s => ({ ...s, country: e.target.value }))}
+                    className="w-full h-[52px] border-b border-gold/30 bg-transparent font-jost text-[14px] font-light text-ltext outline-none px-1 appearance-none cursor-pointer focus:border-gold/60 transition-colors duration-300"
+                  >
+                    {COUNTRIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -361,7 +389,7 @@ export default function CheckoutPage() {
                   {contact.phone && <p>{contact.phone}</p>}
                   <p>{[shipping.line1, shipping.line2].filter(Boolean).join(" ")}</p>
                   <p>{[shipping.city, shipping.province, shipping.zip].filter(Boolean).join(" ")}</p>
-                  <p>{t.addrCountryVal}</p>
+                  <p>{shipping.country}</p>
                 </div>
               )}
 
@@ -370,6 +398,7 @@ export default function CheckoutPage() {
                   clientSecret={clientSecret}
                   orderId={orderId}
                   orderNumber={orderNumber}
+                  hasBespoke={items.some(i => i.size === "Bespoke")}
                   onSuccess={handleSuccess}
                   onError={(msg) => setError(msg)}
                 />
@@ -413,7 +442,7 @@ export default function CheckoutPage() {
                   <div key={`${item.productId}::${item.color}::${item.size}`} className="flex gap-3">
                     <div className="w-14 h-[66px] flex-shrink-0 border border-gold/[0.15] overflow-hidden relative bg-gold/[0.06]">
                       {item.imageUrl ? (
-                        <Image src={item.imageUrl} alt={item.productName} fill className="object-cover" unoptimized />
+                        <Image src={item.imageUrl} alt={item.productName} fill sizes="56px" className="object-cover" unoptimized />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="font-cormorant text-[20px] text-gold/30">L</span>

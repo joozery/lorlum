@@ -1,12 +1,12 @@
 "use client";
 
-import { FileText, ChevronRight, User, Calendar, CreditCard, MapPin } from "lucide-react";
+import { FileText, ChevronRight, User, Calendar, CreditCard, MapPin, Scissors } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { orderStatusConfig, nextOrderStatus, nextOrderStatusLabel } from "@/lib/data/orders";
-import type { Order, OrderStatus } from "@/types";
+import type { Order, OrderStatus, BespokeMeasurements } from "@/types";
 
 interface OrderDetailDialogProps {
   order: Order | null;
@@ -16,6 +16,52 @@ interface OrderDetailDialogProps {
 
 const STATUS_STEPS: OrderStatus[] = ["pending", "paid", "processing", "shipped"];
 
+function BespokeMeasurementsPanel({ m, garmentType }: { m: BespokeMeasurements; garmentType?: string }) {
+  const type = m.garmentType ?? garmentType ?? "shirt";
+
+  const shirtRows = [
+    { label: "Chest", value: m.chest },
+    { label: "Waist", value: m.waist },
+    { label: "Shoulder", value: m.shoulder },
+    { label: "Sleeve / Length", value: m.sleeve },
+  ];
+
+  const trouserRows = [
+    { label: "Waist", value: m.waist },
+    { label: "Hip", value: m.hip },
+    { label: "Rise", value: m.rise },
+    { label: "Thigh", value: m.thigh },
+    { label: "Outseam", value: m.outseam },
+    { label: "Hem", value: m.hem },
+  ];
+
+  const rows = type === "trousers" ? trouserRows : shirtRows;
+
+  return (
+    <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <Scissors className="h-3.5 w-3.5 text-amber-600" />
+        <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+          Bespoke — {type === "trousers" ? "Trousers" : "Shirt"}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {rows.map(r => r.value ? (
+          <div key={r.label} className="bg-white rounded-lg px-2.5 py-2 border border-amber-100">
+            <p className="text-[9px] uppercase tracking-wide text-amber-500 mb-0.5">{r.label}</p>
+            <p className="text-sm font-semibold text-gray-800">{r.value} <span className="text-[10px] font-normal text-gray-400">cm</span></p>
+          </div>
+        ) : null)}
+      </div>
+      {m.note && (
+        <p className="mt-2 text-[11px] text-amber-700 italic border-t border-amber-100 pt-2">
+          Note: {m.note}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function OrderDetailDialog({ order, onClose, onUpdateStatus }: OrderDetailDialogProps) {
   if (!order) return null;
 
@@ -23,17 +69,29 @@ export function OrderDetailDialog({ order, onClose, onUpdateStatus }: OrderDetai
   const ns = nextOrderStatus[order.status];
   const currentStep = STATUS_STEPS.indexOf(order.status);
   const isCancelled = order.status === "cancelled";
+  const bespokeItems = order.items.filter(i => i.size === "Bespoke");
+  const hasPendingBespoke = bespokeItems.some(i => !i.bespokeMeasurements);
 
   return (
     <Dialog open={!!order} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between pr-6">
             <DialogTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-gray-400" />
               {order.orderNumber}
             </DialogTitle>
-            <Badge variant={status.variant}>{status.label}</Badge>
+            <div className="flex items-center gap-2">
+              {bespokeItems.length > 0 && (
+                <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-medium ${
+                  hasPendingBespoke ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                }`}>
+                  <Scissors className="h-3 w-3" />
+                  {hasPendingBespoke ? "รอขนาด Bespoke" : "Bespoke ✓"}
+                </span>
+              )}
+              <Badge variant={status.variant}>{status.label}</Badge>
+            </div>
           </div>
         </DialogHeader>
 
@@ -56,7 +114,7 @@ export function OrderDetailDialog({ order, onClose, onUpdateStatus }: OrderDetai
                       </span>
                     </div>
                     {!isLast && (
-                      <div className={`h-px flex-1 mx-1 mb-3 ${i < currentStep ? "bg-gray-900" : "bg-gray-150 bg-gray-200"}`} />
+                      <div className={`h-px flex-1 mx-1 mb-3 ${i < currentStep ? "bg-gray-900" : "bg-gray-200"}`} />
                     )}
                   </div>
                 );
@@ -118,19 +176,43 @@ export function OrderDetailDialog({ order, onClose, onUpdateStatus }: OrderDetai
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">รายการสินค้า</p>
             <div className="overflow-hidden rounded-xl border border-gray-100">
               {order.items.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between border-b border-gray-50 px-4 py-3 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                    <p className="text-xs text-gray-400">
-                      {item.quantity} ชิ้น × {formatCurrency(item.price)}
+                <div key={i} className="border-b border-gray-50 last:border-0">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">{item.productName}</p>
+                        {item.size === "Bespoke" && (
+                          <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                            <Scissors className="h-2.5 w-2.5" /> Bespoke
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {item.quantity} ชิ้น × {formatCurrency(item.price)}
+                        {item.color && ` · ${item.color}`}
+                        {item.size && item.size !== "Bespoke" && ` · EU ${item.size}`}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 ml-3">
+                      {formatCurrency(item.price * item.quantity)}
                     </p>
                   </div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {formatCurrency(item.price * item.quantity)}
-                  </p>
+
+                  {/* Bespoke measurements for this item */}
+                  {item.size === "Bespoke" && (
+                    <div className="px-4 pb-3">
+                      {item.bespokeMeasurements ? (
+                        <BespokeMeasurementsPanel m={item.bespokeMeasurements} />
+                      ) : (
+                        <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5 flex items-center gap-2">
+                          <Scissors className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                          <p className="text-[11px] text-amber-700">
+                            ลูกค้ายังไม่ได้กรอกขนาด Bespoke — รอการยืนยัน
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
               <div className="flex items-center justify-between bg-gray-50 px-4 py-3">

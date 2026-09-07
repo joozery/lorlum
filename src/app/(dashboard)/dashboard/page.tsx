@@ -16,6 +16,8 @@ import { StatsCard } from "@/components/shared/stats-card";
 import { orderStatusConfig } from "@/lib/data/orders";
 import Link from "next/link";
 
+type Period = "today" | "week" | "month";
+
 /* ── Types ──────────────────────────────── */
 interface DashboardKPIs {
   todayRevenue: number;
@@ -24,6 +26,13 @@ interface DashboardKPIs {
   totalCustomers: number;
   newCustomersThisMonth: number;
   lowStockCount: number;
+}
+
+interface PeriodStat {
+  revenue: number;
+  orders: number;
+  revPct: number;
+  ordPct: number;
 }
 
 interface RecentOrder {
@@ -52,6 +61,7 @@ interface TodaySummary {
 
 interface DashboardData {
   kpis: DashboardKPIs;
+  periods: { today: PeriodStat; week: PeriodStat; month: PeriodStat };
   weeklyRevenue: RevenueDataPoint[];
   categoryBreakdown: CategoryDataPoint[];
   recentOrders: RecentOrder[];
@@ -72,6 +82,7 @@ const avatarColors = [
 export default function DashboardPage() {
   const [data,    setData]    = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [period,  setPeriod]  = useState<Period>("today");
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -80,23 +91,36 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const periodLabel: Record<Period, string> = {
+    today: "วันนี้",
+    week:  "สัปดาห์นี้",
+    month: "เดือนนี้",
+  };
+  const periodCompare: Record<Period, string> = {
+    today: "vs เมื่อวาน",
+    week:  "vs สัปดาห์ที่แล้ว",
+    month: "vs เดือนที่แล้ว",
+  };
+
+  const ps = data?.periods[period];
+
   const kpis = data ? [
     {
-      title: "ยอดขายวันนี้",
-      value: formatCurrency(data.kpis.todayRevenue),
-      change: "วันนี้",
-      up: true,
+      title: `ยอดขาย${periodLabel[period]}`,
+      value: formatCurrency(ps?.revenue ?? 0),
+      change: ps ? `${ps.revPct >= 0 ? "+" : ""}${ps.revPct}% ${periodCompare[period]}` : "",
+      up: (ps?.revPct ?? 0) >= 0,
       sub: "ยอดชำระสำเร็จ",
       icon: TrendingUp,
       iconBg: "bg-emerald-50",
       sparkColor: "#10b981",
     },
     {
-      title: "คำสั่งซื้อวันนี้",
-      value: String(data.kpis.todayOrders),
-      change: `+${data.kpis.todayOrders}`,
-      up: true,
-      sub: "ออเดอร์ใหม่วันนี้",
+      title: `ออเดอร์${periodLabel[period]}`,
+      value: String(ps?.orders ?? 0),
+      change: ps ? `${ps.ordPct >= 0 ? "+" : ""}${ps.ordPct}% ${periodCompare[period]}` : "",
+      up: (ps?.ordPct ?? 0) >= 0,
+      sub: "คำสั่งซื้อที่ชำระแล้ว",
       icon: ShoppingCart,
       iconBg: "bg-blue-50",
       sparkColor: "#3b82f6",
@@ -114,7 +138,7 @@ export default function DashboardPage() {
     {
       title: "ลูกค้าทั้งหมด",
       value: String(data.kpis.totalCustomers),
-      change: `+${data.kpis.newCustomersThisMonth}`,
+      change: `+${data.kpis.newCustomersThisMonth} เดือนนี้`,
       up: true,
       sub: "ลูกค้าใหม่เดือนนี้",
       icon: Users,
@@ -139,6 +163,23 @@ export default function DashboardPage() {
     <div>
       <Header title="แดชบอร์ด" />
       <main className="p-6 space-y-6">
+
+        {/* ── Period toggle ── */}
+        <div className="flex items-center gap-2">
+          {(["today", "week", "month"] as Period[]).map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                period === p
+                  ? "bg-gray-900 text-white"
+                  : "bg-white border border-gray-200 text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              {periodLabel[p]}
+            </button>
+          ))}
+        </div>
 
         {/* ── KPI cards ── */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

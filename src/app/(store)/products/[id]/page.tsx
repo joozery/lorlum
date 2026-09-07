@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
 
   const [activeImg,    setActiveImg]    = useState(0);
   const [activeColor,  setActiveColor]  = useState<ColorVariant | null>(null);
-  const [activeSize,   setActiveSize]   = useState<number | null>(null);
+  const [activeSize,   setActiveSize]   = useState<number | string | null>(null);
   const [openAccord,   setOpenAccord]   = useState<number | null>(0);
   const [sizeModal,    setSizeModal]    = useState(false);
   const [qty,          setQty]          = useState(1);
@@ -183,7 +183,7 @@ export default function ProductDetailPage() {
                   className={`w-[60px] md:w-[72px] cursor-pointer overflow-hidden relative border transition-colors duration-300 ${activeImg === i ? "border-gold" : "border-gold/20"}`}
                   style={{ aspectRatio: "6/7" }}
                 >
-                  <Image src={src} alt={`thumb-${i}`} fill className="object-cover" unoptimized />
+                  <Image src={src} alt={`thumb-${i}`} fill sizes="72px" className="object-cover" unoptimized />
                 </div>
               ))}
             </div>
@@ -192,7 +192,7 @@ export default function ProductDetailPage() {
           {/* Main image */}
           <div className="flex-1 relative overflow-hidden border border-gold/[0.15]" style={{ aspectRatio: "4/5" }}>
             {gallery[activeImg] ? (
-              <Image src={gallery[activeImg]} alt={product.nameEn || product.name} fill className="object-cover" unoptimized />
+              <Image src={gallery[activeImg]} alt={product.nameEn || product.name} fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover" unoptimized />
             ) : (
               <div className="absolute inset-0 bg-cream flex items-center justify-center">
                 <span className="font-cormorant font-light text-[120px] text-gold/20 leading-none">L</span>
@@ -269,6 +269,27 @@ export default function ProductDetailPage() {
                     }`}
                   >{s}</button>
                 ))}
+              </div>
+
+              {/* Bespoke option */}
+              <div className="mt-3">
+                <button
+                  onClick={() => setActiveSize(activeSize === "Bespoke" ? null : "Bespoke")}
+                  className={`w-full h-11 text-[10px] tracking-[0.22em] uppercase cursor-pointer transition-all duration-200 border font-jost ${
+                    activeSize === "Bespoke"
+                      ? "bg-espresso text-gold-lt border-espresso"
+                      : "bg-transparent text-muted border-gold/25 hover:border-gold/50 hover:text-oak-d"
+                  }`}
+                >
+                  Bespoke — {lang === "en" ? "Custom Measurements" : "วัดขนาดพิเศษ"}
+                </button>
+                {activeSize === "Bespoke" && (
+                  <p className="mt-2 text-[10px] font-light text-muted leading-[1.7] tracking-[0.03em]">
+                    {lang === "en"
+                      ? "After payment, you will be asked to provide your measurements (Chest, Waist, Shoulder width, Sleeve/Length) in centimetres."
+                      : "หลังชำระเงิน ระบบจะให้คุณกรอกขนาดตัว (รอบอก, รอบเอว, ความกว้างไหล่, ความยาวแขน/ลำตัว) เป็นเซนติเมตร"}
+                  </p>
+                )}
               </div>
             </div>
           )}

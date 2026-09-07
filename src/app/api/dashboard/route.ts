@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import mongoose from "mongoose";
-import Order from "@/models/Order";
 import { Product } from "@/models/Product";
 import Customer from "@/models/Customer";
 
@@ -10,27 +9,56 @@ const CAT_COLORS = ["#111111", "#6b7280", "#d1d5db", "#f59e0b", "#3b82f6", "#8b5
 
 function bangkokMidnight() {
   const now = new Date();
-  // UTC+7
   const bkk = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
   bkk.setHours(0, 0, 0, 0);
-  // convert back to UTC
   const offsetMs = now.getTime() - new Date(now.toLocaleString("en-US", { timeZone: "UTC" })).getTime();
-  const utcMidnight = new Date(bkk.getTime() - offsetMs);
-  return utcMidnight;
+  return new Date(bkk.getTime() - offsetMs);
+}
+
+function pctChange(curr: number, prev: number) {
+  if (prev === 0) return curr > 0 ? 100 : 0;
+  return Math.round(((curr - prev) / prev) * 100);
 }
 
 export async function GET() {
   await connectDB();
   const col = mongoose.connection.collection("orders");
 
-  const todayStart  = bangkokMidnight();
-  const monthStart  = new Date(todayStart);
+  const todayStart = bangkokMidnight();
+
+  // Yesterday
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+  // This week (Mon–today)
+  const weekStart = new Date(todayStart);
+  const dow = weekStart.getDay();
+  weekStart.setDate(weekStart.getDate() - (dow === 0 ? 6 : dow - 1));
+  const prevWeekStart = new Date(weekStart);
+  prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+
+  // This month
+  const monthStart = new Date(todayStart);
   monthStart.setDate(1);
+  const prevMonthStart = new Date(monthStart);
+  prevMonthStart.setMonth(prevMonthStart.getMonth() - 1);
+
+  // 7-day chart
   const sevenDaysAgo = new Date(todayStart);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
+  const aggRevenue = (from: Date, to?: Date) => col.aggregate([
+    { $match: { paymentStatus: "paid", createdAt: to ? { $gte: from, $lt: to } : { $gte: from } } },
+    { $group: { _id: null, revenue: { $sum: "$total" }, count: { $sum: 1 } } },
+  ]).toArray();
+
   const [
     todayStats,
+    yesterdayStats,
+    weekStats,
+    prevWeekStats,
+    monthStats,
+    prevMonthStats,
     weeklyRaw,
     categoryRaw,
     recentOrders,
@@ -40,89 +68,71 @@ export async function GET() {
     lowStockProducts,
     todayShipped,
   ] = await Promise.all([
-    // Today's revenue & order count
-    col.aggregate([
-      { $match: { paymentStatus: "paid", createdAt: { $gte: todayStart } } },
-      { $group: { _id: null, revenue: { $sum: "$total" }, count: { $sum: 1 } } },
-    ]).toArray(),
+    aggRevenue(todayStart),
+    aggRevenue(yesterdayStart, todayStart),
+    aggRevenue(weekStart),
+    aggRevenue(prevWeekStart, weekStart),
+    aggRevenue(monthStart),
+    aggRevenue(prevMonthStart, monthStart),
 
-    // Last 7 days revenue & orders grouped by local date
     col.aggregate([
       { $match: { paymentStatus: "paid", createdAt: { $gte: sevenDaysAgo } } },
       { $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "Asia/Bangkok" } },
+        _id:     { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "Asia/Bangkok" } },
         revenue: { $sum: "$total" },
         orders:  { $sum: 1 },
       }},
       { $sort: { _id: 1 } },
     ]).toArray(),
 
-    // Revenue by product category (from paid orders)
     col.aggregate([
       { $match: { paymentStatus: "paid" } },
       { $unwind: "$items" },
-      { $lookup: {
-        from: "products",
-        localField: "items.productId",
-        foreignField: "_id",
-        as: "product",
-      }},
+      { $lookup: { from: "products", localField: "items.productId", foreignField: "_id", as: "product" } },
       { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
-      { $group: {
-        _id:   { $ifNull: ["$product.category", "อื่นๆ"] },
-        total: { $sum: { $multiply: ["$items.price", "$items.qty"] } },
-      }},
+      { $group: { _id: { $ifNull: ["$product.category", "อื่นๆ"] }, total: { $sum: { $multiply: ["$items.price", "$items.qty"] } } } },
       { $sort: { total: -1 } },
       { $limit: 6 },
     ]).toArray(),
 
-    // Recent 5 paid orders
-    col.find(
-      { paymentStatus: "paid" },
-      { sort: { createdAt: -1 }, limit: 5 }
-    ).toArray(),
+    col.find({ paymentStatus: "paid" }, { sort: { createdAt: -1 }, limit: 5 }).toArray(),
 
-    // Total active products
     Product.countDocuments({ isActive: true }),
-
-    // Total customers
     Customer.countDocuments({}),
-
-    // New customers this month
     Customer.countDocuments({ createdAt: { $gte: monthStart } }),
 
-    // Low stock products (stock > 0 to avoid showing discontinued, sorted asc)
     Product.find({ isActive: true, stock: { $gt: 0, $lte: 10 } })
-      .sort({ stock: 1 })
-      .limit(5)
-      .select("name sku stock")
-      .lean(),
+      .sort({ stock: 1 }).limit(5).select("name sku stock").lean(),
 
-    // Today shipped / delivered
-    col.countDocuments({
-      status: { $in: ["shipped", "delivered"] },
-      updatedAt: { $gte: todayStart },
-    }),
+    col.countDocuments({ status: { $in: ["shipped", "delivered"] }, updatedAt: { $gte: todayStart } }),
   ]);
 
-  // ── KPIs ──────────────────────────────────────────
-  const todayRevenue = (todayStats[0]?.revenue as number) ?? 0;
-  const todayOrders  = (todayStats[0]?.count  as number) ?? 0;
+  // ── Period stats ──────────────────────────────────
+  const todayRevenue  = (todayStats[0]?.revenue     as number) ?? 0;
+  const todayOrders   = (todayStats[0]?.count        as number) ?? 0;
+  const yesterdayRev  = (yesterdayStats[0]?.revenue  as number) ?? 0;
+  const yesterdayOrd  = (yesterdayStats[0]?.count    as number) ?? 0;
+  const weekRevenue   = (weekStats[0]?.revenue       as number) ?? 0;
+  const weekOrders    = (weekStats[0]?.count         as number) ?? 0;
+  const prevWeekRev   = (prevWeekStats[0]?.revenue   as number) ?? 0;
+  const prevWeekOrd   = (prevWeekStats[0]?.count     as number) ?? 0;
+  const monthRevenue  = (monthStats[0]?.revenue      as number) ?? 0;
+  const monthOrders   = (monthStats[0]?.count        as number) ?? 0;
+  const prevMonthRev  = (prevMonthStats[0]?.revenue  as number) ?? 0;
+  const prevMonthOrd  = (prevMonthStats[0]?.count    as number) ?? 0;
+
   const lowStockCount = await Product.countDocuments({ isActive: true, stock: { $lte: 10, $gt: 0 } });
 
   // ── Weekly revenue chart ──────────────────────────
-  // Build a map: dateStr -> { revenue, orders }
   const weekMap: Record<string, { revenue: number; orders: number }> = {};
   for (const row of weeklyRaw) {
     weekMap[row._id as string] = { revenue: row.revenue as number, orders: row.orders as number };
   }
-  // Generate last 7 dates
   const weeklyRevenue = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(sevenDaysAgo);
     d.setDate(d.getDate() + i);
-    // convert to Bangkok local date string
-    const dateStr = d.toLocaleDateString("sv-SE", { timeZone: "Asia/Bangkok" }); // "YYYY-MM-DD"
-    const jsDay   = new Date(dateStr + "T12:00:00+07:00").getDay(); // 0=Sun..6=Sat
+    const dateStr = d.toLocaleDateString("sv-SE", { timeZone: "Asia/Bangkok" });
+    const jsDay   = new Date(dateStr + "T12:00:00+07:00").getDay();
     return {
       day:     THAI_DAY[jsDay],
       revenue: weekMap[dateStr]?.revenue ?? 0,
@@ -154,7 +164,7 @@ export async function GET() {
     name:     (p as { name: string }).name,
     sku:      (p as { sku: string }).sku,
     stock:    (p as { stock: number }).stock,
-    maxStock: 50, // default display max; relative bar
+    maxStock: 50,
   }));
 
   return NextResponse.json({
@@ -165,6 +175,11 @@ export async function GET() {
       totalCustomers,
       newCustomersThisMonth: newCustomers,
       lowStockCount,
+    },
+    periods: {
+      today:    { revenue: todayRevenue,  orders: todayOrders,  revPct: pctChange(todayRevenue, yesterdayRev),  ordPct: pctChange(todayOrders, yesterdayOrd) },
+      week:     { revenue: weekRevenue,   orders: weekOrders,   revPct: pctChange(weekRevenue, prevWeekRev),    ordPct: pctChange(weekOrders, prevWeekOrd) },
+      month:    { revenue: monthRevenue,  orders: monthOrders,  revPct: pctChange(monthRevenue, prevMonthRev),  ordPct: pctChange(monthOrders, prevMonthOrd) },
     },
     weeklyRevenue,
     categoryBreakdown,

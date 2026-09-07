@@ -65,7 +65,10 @@ function buildNAV(t: Translations): Section[] {
         { id: "payments", label: t.payments, href: "/payments", icon: CreditCard },
         {
           id: "customers", label: t.customers, href: "/customers", icon: Users,
-          children: [{ id: "u-all", label: t.allCustomers, href: "/customers" }],
+          children: [
+            { id: "u-all",      label: t.allCustomers,   href: "/customers" },
+            { id: "u-requests", label: "คำขอสมัครสมาชิก", href: "/customers/requests" },
+          ],
         },
       ],
     },

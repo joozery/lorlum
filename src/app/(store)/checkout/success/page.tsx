@@ -15,6 +15,8 @@ function CheckoutSuccessContent() {
   const { clearCart }  = useCart();
   const [state,        setState]       = useState<State>("loading");
   const [orderNumber,  setOrderNumber] = useState("");
+  const [orderId,      setOrderId]     = useState("");
+  const [hasBespoke,   setHasBespoke]  = useState(false);
   const called = useRef(false);
 
   useEffect(() => {
@@ -23,10 +25,13 @@ function CheckoutSuccessContent() {
 
     const orderId         = params.get("orderId")                      ?? "";
     const orderNum        = params.get("orderNumber")                   ?? "";
+    setOrderId(orderId);
     const paymentIntentId = params.get("payment_intent")               ?? "";
     const clientSecret    = params.get("payment_intent_client_secret") ?? "";
+    const bespokeParam    = params.get("hasBespoke");
 
     setOrderNumber(orderNum);
+    if (bespokeParam === "1") setHasBespoke(true);
 
     if (!orderId || !paymentIntentId) { setState("failed"); return; }
 
@@ -95,6 +100,21 @@ function CheckoutSuccessContent() {
         <p className="text-[13px] font-light text-muted leading-[1.8] mb-9">
           Thank you for your trust. Your LORLUM piece is being carefully prepared and will be dispatched within 1–2 working days.
         </p>
+        {hasBespoke && (
+          <div className="mb-6 px-6 py-5 bg-gold/[0.07] border border-gold/25">
+            <p className="text-[9px] tracking-[0.4em] uppercase text-gold mb-2">Bespoke Order</p>
+            <p className="text-[12px] font-light text-muted leading-[1.8] mb-4">
+              ออเดอร์นี้มีรายการ Bespoke — กรุณากรอกขนาดตัวเพื่อให้ทีมงานดำเนินการตัดเย็บ
+            </p>
+            <Link
+              href={`/account/orders/${orderId}/bespoke`}
+              className="inline-block bg-gold text-espresso text-[9px] font-semibold tracking-[0.25em] uppercase px-7 py-3 no-underline hover:opacity-90 transition-opacity"
+            >
+              กรอกขนาด Bespoke →
+            </Link>
+          </div>
+        )}
+
         <div className="flex gap-3 justify-center">
           <Link href="/account/orders" className="inline-block bg-espresso text-gold-lt text-[9.5px] font-medium tracking-[0.28em] uppercase px-8 py-[17px] no-underline">
             ดูออเดอร์

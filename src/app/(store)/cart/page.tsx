@@ -67,7 +67,7 @@ export default function CartPage() {
                     {/* Image */}
                     <div className="relative flex-shrink-0 w-[110px] md:w-[140px] border border-gold/[0.15] overflow-hidden" style={{ aspectRatio:"6/7" }}>
                       {item.imageUrl ? (
-                        <Image src={item.imageUrl} alt={item.productName} fill className="object-cover" />
+                        <Image src={item.imageUrl} alt={item.productName} fill sizes="(max-width:768px) 110px, 140px" className="object-cover" />
                       ) : (
                         <div className="g2 absolute inset-0 flex items-center justify-center">
                           <span className="font-cormorant text-[40px] text-white/38 font-light">L</span>
