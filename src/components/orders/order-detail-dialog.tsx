@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { orderStatusConfig, nextOrderStatus, nextOrderStatusLabel } from "@/lib/data/orders";
+import { useLanguage } from "@/contexts/language-context";
 import type { Order, OrderStatus, BespokeMeasurements } from "@/types";
 
 interface OrderDetailDialogProps {
@@ -63,6 +64,7 @@ function BespokeMeasurementsPanel({ m, garmentType }: { m: BespokeMeasurements; 
 }
 
 export function OrderDetailDialog({ order, onClose, onUpdateStatus }: OrderDetailDialogProps) {
+  const { lang } = useLanguage();
   if (!order) return null;
 
   const status = orderStatusConfig[order.status];
@@ -226,10 +228,15 @@ export function OrderDetailDialog({ order, onClose, onUpdateStatus }: OrderDetai
 
           {/* Actions */}
           <div className="flex items-center justify-between border-t border-gray-100 pt-1">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+            <a
+              href={`/orders/${order.id}/receipt?lang=${lang}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-50 transition-colors"
+            >
               <FileText className="h-3.5 w-3.5" />
-              ออกใบเสร็จ
-            </Button>
+              {lang === "en" ? "Issue Receipt" : "ออกใบเสร็จ"}
+            </a>
             {ns && (
               <Button size="sm" className="gap-1.5" onClick={() => onUpdateStatus(order.id, ns)}>
                 {nextOrderStatusLabel[ns]}
