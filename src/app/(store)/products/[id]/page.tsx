@@ -16,7 +16,7 @@ interface Product {
   id: string;
   name: string; nameEn: string;
   description: string; descriptionEn: string;
-  price: number; category: string;
+  price: number; costPrice?: number; bespokePrice?: number; category: string;
   imageUrl: string;
   stock: number; isActive: boolean;
   colorVariants: ColorVariant[];
