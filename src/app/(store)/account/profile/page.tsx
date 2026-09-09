@@ -8,6 +8,7 @@ import { StoreFooter } from "@/components/store/footer";
 import { useStoreLang } from "@/contexts/store-language-context";
 import ST from "@/lib/store-translations";
 import { COUNTRIES } from "@/lib/countries";
+import { PhoneInput } from "@/components/store/phone-input";
 
 interface Address {
   label: string; line1: string; line2: string;
@@ -365,8 +366,10 @@ export default function ProfilePage() {
 
             <div>
               <label className={labelCls}>{t.profPhone}</label>
-              <input value={info.phone} onChange={e => setInfo(f => ({ ...f, phone: e.target.value }))}
-                placeholder="+66 81 234 5678" className={inputCls} />
+              <PhoneInput
+                value={info.phone}
+                onChange={v => setInfo(f => ({ ...f, phone: v }))}
+              />
             </div>
 
             <button onClick={saveInfo} disabled={saving}

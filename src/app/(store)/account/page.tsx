@@ -9,6 +9,7 @@ import { StoreFooter } from "@/components/store/footer";
 import { useStoreLang } from "@/contexts/store-language-context";
 import ST from "@/lib/store-translations";
 import { maskPhone } from "@/lib/sms";
+import { PhoneInput } from "@/components/store/phone-input";
 
 type Mode       = "login" | "register" | "otp-send" | "otp-verify";
 type OtpChannel = "email" | "sms";
@@ -281,9 +282,11 @@ export default function AccountPage() {
                   </div>
                   <div>
                     <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.phoneLabel}</label>
-                    <input type="tel" value={phone} onChange={e => { setPhone(e.target.value); setError(""); }}
-                      placeholder="08X-XXX-XXXX"
-                      className="w-full h-11 border-none border-b border-gold/35 bg-transparent font-jost text-[13px] text-espresso outline-none px-1" />
+                    <PhoneInput
+                      value={phone}
+                      onChange={v => { setPhone(v); setError(""); }}
+                      placeholder="81 234 5678"
+                    />
                   </div>
                   <div>
                     <label className="block text-[8.5px] tracking-[0.28em] uppercase text-muted mb-2">{t.pwdLabel}</label>
@@ -315,9 +318,9 @@ export default function AccountPage() {
 
               <p className="text-[10px] text-muted text-center mt-6 leading-[1.8]">
                 {t.agreeTerms}{" "}
-                <Link href="/" className="text-gold border-b border-gold/35">{t.termsLink}</Link>
+                <Link href="/terms" className="text-gold border-b border-gold/35">{t.termsLink}</Link>
                 {" & "}
-                <Link href="/" className="text-gold border-b border-gold/35">{t.privacyLink}</Link>
+                <Link href="/privacy" className="text-gold border-b border-gold/35">{t.privacyLink}</Link>
               </p>
             </div>
           )}
