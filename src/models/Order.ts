@@ -61,4 +61,4 @@ if (process.env.NODE_ENV === "development" && models.Order) {
   mongoose.deleteModel("Order");
 }
 
-export default model("Order", OrderSchema);
+export default models.Order || model("Order", OrderSchema);
