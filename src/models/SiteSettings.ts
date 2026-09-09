@@ -2,6 +2,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 
 export interface ISiteSettings {
   key: string;
+  faviconUrl: string;
   hero: {
     bgImages: string[];
     headingLine1: string;
@@ -22,7 +23,8 @@ export interface ISiteSettings {
 
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
-    key: { type: String, default: "main", unique: true },
+    key:        { type: String, default: "main", unique: true },
+    faviconUrl: { type: String, default: "/logolorlum.svg" },
     hero: {
       bgImages:      { type: [String], default: [] },
       headingLine1:  { type: String, default: "Linen" },

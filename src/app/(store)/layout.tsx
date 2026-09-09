@@ -20,10 +20,24 @@ const jost = Jost({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "LORLUM — Luxury Footwear",
-  description: "Masterpiece handcrafted luxury shore footwear.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  let faviconUrl = "/logolorlum.svg";
+  try {
+    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+    const res = await fetch(`${base}/api/site-settings`, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.faviconUrl) faviconUrl = data.faviconUrl;
+    }
+  } catch {
+    // fallback to default
+  }
+  return {
+    title: "LORLUM — Luxury Footwear",
+    description: "Masterpiece handcrafted luxury shore footwear.",
+    icons: { icon: faviconUrl },
+  };
+}
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
