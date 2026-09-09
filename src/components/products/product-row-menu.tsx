@@ -9,10 +9,16 @@ import type { Product } from "@/types";
 interface ProductRowMenuProps {
   product: Product;
   onToggleActive: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ProductRowMenu({ product, onToggleActive }: ProductRowMenuProps) {
+export function ProductRowMenu({ product, onToggleActive, onDelete }: ProductRowMenuProps) {
   const router = useRouter();
+
+  const handleDelete = () => {
+    if (!confirm(`ยืนยันลบสินค้า "${product.name}" ?`)) return;
+    onDelete(product.id);
+  };
 
   return (
     <DropdownMenu.Root>
@@ -42,7 +48,10 @@ export function ProductRowMenu({ product, onToggleActive }: ProductRowMenuProps)
             }
           </DropdownMenu.Item>
           <DropdownMenu.Separator className="my-1 h-px bg-gray-100" />
-          <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 hover:bg-red-50 focus:outline-none">
+          <DropdownMenu.Item
+            className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 hover:bg-red-50 focus:outline-none"
+            onSelect={handleDelete}
+          >
             <Trash2 className="h-3.5 w-3.5" /> ลบสินค้า
           </DropdownMenu.Item>
         </DropdownMenu.Content>

@@ -102,6 +102,12 @@ export default function ProductsPage() {
     });
   };
 
+  const handleDelete = async (id: string) => {
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setTotal((t) => t - 1);
+    await fetch(`/api/products/${id}`, { method: "DELETE" });
+  };
+
   return (
     <div>
       <Header title="จัดการสินค้า" />
@@ -161,7 +167,7 @@ export default function ProductsPage() {
           </div>
         ) : (
           <>
-            <ProductTable products={products} onToggleActive={handleToggleActive} />
+            <ProductTable products={products} onToggleActive={handleToggleActive} onDelete={handleDelete} />
             <Pagination total={total} shown={products.length} />
           </>
         )}

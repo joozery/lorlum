@@ -12,9 +12,10 @@ import type { Product } from "@/types";
 interface ProductTableProps {
   products: Product[];
   onToggleActive: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ProductTable({ products, onToggleActive }: ProductTableProps) {
+export function ProductTable({ products, onToggleActive, onDelete }: ProductTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
       <table className="w-full text-sm">
@@ -88,6 +89,7 @@ export function ProductTable({ products, onToggleActive }: ProductTableProps) {
                 <ProductRowMenu
                   product={product}
                   onToggleActive={onToggleActive}
+                  onDelete={onDelete}
                 />
               </td>
             </tr>
