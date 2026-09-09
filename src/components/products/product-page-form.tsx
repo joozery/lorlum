@@ -279,6 +279,7 @@ export function ProductPageForm({ product }: ProductPageFormProps) {
   const [category,      setCategory]      = useState(product?.category      ?? "");
   const [price,         setPrice]         = useState(String(product?.price  ?? ""));
   const [costPrice,     setCostPrice]     = useState(String(product?.costPrice ?? ""));
+  const [bespokePrice,  setBespokePrice]  = useState(String(product?.bespokePrice ?? ""));
   const [stock,         setStock]         = useState(String(product?.stock  ?? ""));
   const [description,   setDescription]   = useState(product?.description   ?? "");
   const [descriptionEn, setDescriptionEn] = useState(product?.descriptionEn ?? "");
@@ -397,7 +398,8 @@ export function ProductPageForm({ product }: ProductPageFormProps) {
       sku:           sku.trim().toUpperCase(),
       category,
       price:         Number(price),
-      costPrice:     costPrice ? Number(costPrice) : undefined,
+      costPrice:     costPrice    ? Number(costPrice)    : undefined,
+      bespokePrice:  bespokePrice ? Number(bespokePrice) : undefined,
       stock:         variantStockTotal > 0 ? variantStockTotal : (Number(stock) || 0),
       description:   description.trim(),
       descriptionEn: descriptionEn.trim(),
@@ -559,7 +561,7 @@ export function ProductPageForm({ product }: ProductPageFormProps) {
             {/* ราคา & สต็อก */}
             <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
               <p className="text-sm font-semibold text-gray-700">ราคา & สต็อก</p>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-1.5">
                   <Label>ราคาทุน (บาท)</Label>
                   <Input type="number" min="0" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} placeholder="0" />
@@ -567,6 +569,10 @@ export function ProductPageForm({ product }: ProductPageFormProps) {
                 <div className="space-y-1.5">
                   <Label>ราคาขาย (บาท) <span className="text-red-500">*</span></Label>
                   <Input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>ราคา Bespoke (บาท)</Label>
+                  <Input type="number" min="0" value={bespokePrice} onChange={(e) => setBespokePrice(e.target.value)} placeholder="ถ้าว่าง = ราคาปกติ" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>

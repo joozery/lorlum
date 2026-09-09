@@ -37,6 +37,8 @@ function toProduct(raw: Record<string, unknown>): Product {
     description:      String(raw.description   ?? ""),
     descriptionEn:    String(raw.descriptionEn ?? ""),
     price:            Number(raw.price         ?? 0),
+    costPrice:        raw.costPrice   != null ? Number(raw.costPrice)   : undefined,
+    bespokePrice:     raw.bespokePrice != null ? Number(raw.bespokePrice) : undefined,
     category:         String(raw.category      ?? ""),
     imageUrl:         String(raw.imageUrl      ?? ""),
     stock:            Number(raw.stock         ?? 0),
@@ -106,7 +108,7 @@ export default function ProductDetailPage() {
       color:       activeColor?.name ?? "",
       colorHex:    activeColor?.hex  ?? "",
       size:        activeSize,
-      price:       product.price,
+      price:       activeSize === "Bespoke" && product.bespokePrice ? product.bespokePrice : product.price,
       qty,
     });
     setToast(t.toastAddedBag);
@@ -215,8 +217,13 @@ export default function ProductDetailPage() {
 
           {/* Price */}
           <div className="flex items-baseline gap-4 mb-6">
-            <span className="font-cormorant font-semibold text-[32px] text-gold">{formatPrice(product.price)}</span>
+            <span className="font-cormorant font-semibold text-[32px] text-gold">
+              {formatPrice(activeSize === "Bespoke" && product.bespokePrice ? product.bespokePrice : product.price)}
+            </span>
             <span className="text-[11px] text-muted font-light tracking-[0.06em]">{t.inclVAT}</span>
+            {activeSize === "Bespoke" && product.bespokePrice && product.bespokePrice !== product.price && (
+              <span className="text-[10px] text-muted/50 line-through font-light">{formatPrice(product.price)}</span>
+            )}
           </div>
 
           {/* Description */}
@@ -275,13 +282,13 @@ export default function ProductDetailPage() {
               <div className="mt-3">
                 <button
                   onClick={() => setActiveSize(activeSize === "Bespoke" ? null : "Bespoke")}
-                  className={`w-full h-11 text-[10px] tracking-[0.22em] uppercase cursor-pointer transition-all duration-200 border font-jost ${
+                  className={`w-full h-14 text-[10px] tracking-[0.28em] uppercase cursor-pointer transition-all duration-200 border font-jost ${
                     activeSize === "Bespoke"
                       ? "bg-espresso text-gold-lt border-espresso"
                       : "bg-transparent text-muted border-gold/25 hover:border-gold/50 hover:text-oak-d"
                   }`}
                 >
-                  Bespoke — {lang === "en" ? "Custom Measurements" : "วัดขนาดพิเศษ"}
+                  Bespoke
                 </button>
                 {activeSize === "Bespoke" && (
                   <p className="mt-2 text-[10px] font-light text-muted leading-[1.7] tracking-[0.03em]">

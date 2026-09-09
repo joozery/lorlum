@@ -32,6 +32,7 @@ export interface Product {
   descriptionEn: string;
   price: number;
   costPrice?: number;
+  bespokePrice?: number;
   category: string;
   imageUrl: string;
   stock: number;
