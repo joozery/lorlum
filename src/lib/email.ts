@@ -30,10 +30,10 @@ function otpTemplate(otp: string, purpose: "verify" | "login") {
         </td></tr>
         <tr><td style="padding:24px 40px 40px">
           <p style="margin:0 0 8px;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#8A7B6E;line-height:1.7">
-            รหัสนี้หมดอายุใน <strong>10 นาที</strong> — อย่าแบ่งปันกับผู้อื่น
+            This code expires in <strong>10 minutes</strong> — do not share it with anyone.
           </p>
           <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#B5A898;line-height:1.7">
-            หากท่านไม่ได้ร้องขอรหัสนี้ กรุณาละเว้นอีเมลฉบับนี้
+            If you did not request this code, please disregard this email.
           </p>
           <hr style="border:none;border-top:1px solid rgba(201,167,82,0.15);margin:24px 0 0">
           <p style="margin:16px 0 0;font-family:'Helvetica Neue',sans-serif;font-size:10px;color:#C9B89A;letter-spacing:0.1em">
@@ -90,7 +90,7 @@ function orderConfirmTemplate(p: OrderConfirmParams) {
               </p>
             </td>
             <td style="vertical-align:middle;text-align:right;font-family:'Helvetica Neue',sans-serif;font-size:12px;color:#2C1F0F;white-space:nowrap;padding-left:8px">
-              ฿${(i.price * i.qty).toLocaleString("th-TH")}
+              ฿${(i.price * i.qty).toLocaleString("en-US")}
             </td>
           </tr>
         </table>
@@ -98,7 +98,7 @@ function orderConfirmTemplate(p: OrderConfirmParams) {
     </tr>`).join("");
 
   const addrLine = [p.shipping.line1, p.shipping.line2].filter(Boolean).join(" ");
-  const addrCity = [p.shipping.city && `เขต${p.shipping.city}`, p.shipping.province, p.shipping.zip].filter(Boolean).join(" ");
+  const addrCity = [p.shipping.city && `${p.shipping.city} District`, p.shipping.province, p.shipping.zip].filter(Boolean).join(" ");
 
   return `<!DOCTYPE html>
 <html>
@@ -113,29 +113,29 @@ function orderConfirmTemplate(p: OrderConfirmParams) {
           <p style="margin:0 0 6px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM</p>
           <h1 style="margin:0 0 6px;font-size:26px;font-weight:400;color:#2C1F0F">Order Confirmed</h1>
           <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:12px;color:#8A7B6E">
-            ขอบคุณสำหรับการสั่งซื้อ — ชิ้นงานของท่านกำลังถูกเตรียมอย่างพิถีพิถัน
+            Thank you for your order — your pieces are being carefully prepared.
           </p>
         </td></tr>
 
         <!-- Order number -->
         <tr><td style="padding:20px 40px;background:#fff;border-bottom:1px solid rgba(201,167,82,0.1)">
-          <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">หมายเลขคำสั่งซื้อ</p>
+          <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">Order Number</p>
           <p style="margin:4px 0 0;font-size:20px;letter-spacing:0.15em;color:#C9A752;font-weight:400">${p.orderNumber}</p>
         </td></tr>
 
         <!-- Items -->
         <tr><td style="padding:24px 40px">
-          <p style="margin:0 0 12px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">รายการสินค้า</p>
+          <p style="margin:0 0 12px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">Items</p>
           <table width="100%" cellpadding="0" cellspacing="0">
             ${rows}
           </table>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-top:1px solid rgba(201,167,82,0.3)">
             <tr>
               <td style="padding:12px 0 0;font-family:'Helvetica Neue',sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#2C1F0F">Total</td>
-              <td style="padding:12px 0 0;text-align:right;font-size:18px;color:#C9A752;font-family:Georgia,serif">฿${p.total.toLocaleString("th-TH")}</td>
+              <td style="padding:12px 0 0;text-align:right;font-size:18px;color:#C9A752;font-family:Georgia,serif">฿${p.total.toLocaleString("en-US")}</td>
             </tr>
             <tr>
-              <td colspan="2" style="padding:2px 0 0;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#C9A752;text-align:right">จัดส่งฟรี · Complimentary Shipping</td>
+              <td colspan="2" style="padding:2px 0 0;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#C9A752;text-align:right">Complimentary Shipping</td>
             </tr>
           </table>
         </td></tr>
@@ -143,13 +143,13 @@ function orderConfirmTemplate(p: OrderConfirmParams) {
         <!-- Shipping address -->
         <tr><td style="padding:0 40px 28px">
           <div style="background:#F5F3EE;border:1px solid rgba(201,167,82,0.15);padding:16px 20px">
-            <p style="margin:0 0 8px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">ที่อยู่จัดส่ง</p>
+            <p style="margin:0 0 8px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">Shipping Address</p>
             <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:12px;color:#2C1F0F;line-height:1.8">
               ${p.shipping.name}<br>
               ${p.shipping.phone}<br>
               ${addrLine}<br>
               ${addrCity}<br>
-              ประเทศไทย
+              Thailand
             </p>
           </div>
         </td></tr>
@@ -157,7 +157,7 @@ function orderConfirmTemplate(p: OrderConfirmParams) {
         <!-- Footer -->
         <tr><td style="padding:20px 40px;border-top:1px solid rgba(201,167,82,0.15)">
           <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#8A7B6E;line-height:1.7">
-            จัดส่งผ่าน EMS ภายใน 1–2 วันทำการ — ท่านจะได้รับหมายเลขติดตามพัสดุทางอีเมลอีกครั้ง
+            Shipped via EMS within 1–2 business days — you will receive a tracking number by email.
           </p>
           <hr style="border:none;border-top:1px solid rgba(201,167,82,0.1);margin:16px 0">
           <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:10px;color:#C9B89A;letter-spacing:0.1em">
@@ -201,27 +201,27 @@ function adminInviteTemplate(name: string, link: string, role: string) {
           <p style="margin:0 0 20px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM · Admin</p>
           <h1 style="margin:0 0 10px;font-size:28px;font-weight:400;color:#2C1F0F;line-height:1.2">You're Invited</h1>
           <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:13px;color:#8A7B6E;line-height:1.8">
-            สวัสดีคุณ <strong style="color:#2C1F0F">${name}</strong> — บัญชีผู้ดูแลระบบของคุณถูกสร้างแล้วในระดับ <strong style="color:#2C1F0F">${role}</strong>
+            Hello <strong style="color:#2C1F0F">${name}</strong> — your administrator account has been created at the <strong style="color:#2C1F0F">${role}</strong> level.
           </p>
         </td></tr>
 
         <!-- CTA -->
         <tr><td style="padding:36px 40px;text-align:center">
           <p style="margin:0 0 6px;font-family:'Helvetica Neue',sans-serif;font-size:12px;color:#8A7B6E">
-            กดปุ่มด้านล่างเพื่อตั้งรหัสผ่านของคุณและเริ่มใช้งาน
+            Click the button below to set your password and get started.
           </p>
           <p style="margin:0 0 28px;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#B5A898">
-            ลิงก์นี้มีอายุ <strong>72 ชั่วโมง</strong>
+            This link expires in <strong>72 hours</strong>.
           </p>
           <a href="${link}" style="display:inline-block;background:#2C1F0F;color:#C9A752;font-family:'Helvetica Neue',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;text-decoration:none;padding:16px 40px">
-            ตั้งรหัสผ่าน
+            Set Password
           </a>
         </td></tr>
 
         <!-- Link fallback -->
         <tr><td style="padding:0 40px 32px">
           <div style="background:#F5F3EE;border:1px solid rgba(201,167,82,0.15);padding:14px 18px">
-            <p style="margin:0 0 4px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">หรือเปิด URL นี้</p>
+            <p style="margin:0 0 4px;font-family:'Helvetica Neue',sans-serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7B6E">Or open this URL</p>
             <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#C9A752;word-break:break-all">${link}</p>
           </div>
         </td></tr>
@@ -229,7 +229,7 @@ function adminInviteTemplate(name: string, link: string, role: string) {
         <!-- Footer -->
         <tr><td style="padding:20px 40px;border-top:1px solid rgba(201,167,82,0.15)">
           <p style="margin:0 0 4px;font-family:'Helvetica Neue',sans-serif;font-size:11px;color:#8A7B6E;line-height:1.7">
-            หากคุณไม่ได้ร้องขอสิ่งนี้ กรุณาเพิกเฉยต่ออีเมลนี้
+            If you did not request this, please disregard this email.
           </p>
           <hr style="border:none;border-top:1px solid rgba(201,167,82,0.1);margin:14px 0">
           <p style="margin:0;font-family:'Helvetica Neue',sans-serif;font-size:10px;color:#C9B89A;letter-spacing:0.1em">
@@ -252,7 +252,7 @@ export async function sendAdminInviteEmail(to: string, name: string, link: strin
   const { error } = await resend.emails.send({
     from:    FROM,
     to,
-    subject: "คุณได้รับเชิญเป็นผู้ดูแลระบบ LORLUM",
+    subject: "You've been invited as a LORLUM administrator",
     html:    adminInviteTemplate(name, link, role),
   });
   if (error) throw new Error(error.message);
@@ -298,7 +298,7 @@ function accessRequestAdminTemplate(p: AccessRequestParams) {
         </td></tr>
         <tr><td style="padding:0 40px 36px">
           <p style="margin:0;font-size:11px;color:#8C7355;line-height:1.7">
-            ดูรายการทั้งหมดได้ที่ Admin Dashboard → Access Requests
+            View all requests in the Admin Dashboard → Access Requests
           </p>
           <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:16px 0">
           <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison</p>
@@ -537,16 +537,16 @@ function accountDeletedTemplate(name: string) {
           <p style="margin:0 0 20px;font-size:10px;letter-spacing:0.5em;text-transform:uppercase;color:#C9A752">Maison LORLUM</p>
           <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:24px;font-weight:400;color:#2C1F0F;line-height:1.3">Account Removed</h1>
           <p style="margin:0;font-size:13px;color:#8A7B6E;line-height:1.8">
-            สวัสดีคุณ <strong style="color:#2C1F0F">${name}</strong>
+            Hello <strong style="color:#2C1F0F">${name}</strong>,
           </p>
         </td></tr>
 
         <tr><td style="padding:28px 40px 36px">
           <p style="margin:0 0 16px;font-size:13px;color:#8A7B6E;line-height:1.8">
-            บัญชีสมาชิกของคุณในระบบ LORLUM Maison ถูกลบออกจากระบบโดยทีมงานแล้ว
+            Your LORLUM Maison membership account has been removed by our team.
           </p>
           <p style="margin:0 0 16px;font-size:13px;color:#8A7B6E;line-height:1.8">
-            หากคุณมีข้อสงสัยหรือไม่ได้ร้องขอการเปลี่ยนแปลงนี้ กรุณาติดต่อทีมงานของเราได้ทันที
+            If you have any questions or did not request this change, please contact our team immediately.
           </p>
           <hr style="border:none;border-top:1px solid rgba(201,167,82,0.12);margin:20px 0">
           <p style="margin:0;font-size:10px;color:#C9B89A;letter-spacing:0.1em">© LORLUM Maison · Luxury Footwear</p>
