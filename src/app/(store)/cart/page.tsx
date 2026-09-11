@@ -6,13 +6,16 @@ import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useCart } from "@/context/cart";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
+import { useShippingCopy } from "@/hooks/use-shipping-copy";
 import ST from "@/lib/store-translations";
-
-const fmt = (n: number) => "฿" + n.toLocaleString("th-TH");
 
 export default function CartPage() {
   const { items, count, subtotal, removeItem, updateQty } = useCart();
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
+  const shippingCopy = useShippingCopy();
   const t = ST[lang];
 
   return (
@@ -99,7 +102,7 @@ export default function CartPage() {
                       </div>
 
                       <div className="flex justify-between items-center flex-wrap gap-4">
-                        <span className="font-cormorant font-semibold text-[22px] md:text-[26px] text-gold">{fmt(item.price * item.qty)}</span>
+                        <span className="font-cormorant font-semibold text-[22px] md:text-[26px] text-gold">{formatPrice(item.price * item.qty, currency, rate)}</span>
                         <div className="flex items-center gap-4">
                           <div className="flex items-center border border-gold/25">
                             <button onClick={() => updateQty(item.productId, item.color, item.size, item.qty - 1)}
@@ -133,7 +136,7 @@ export default function CartPage() {
             <h2 className="font-cormorant font-normal text-[22px] tracking-[0.04em] text-oak-d mb-6">{t.orderSummary}</h2>
             <div className="border-t border-gold/[0.12] pt-6">
               {[
-                [t.subtotal, fmt(subtotal)],
+                [t.subtotal, formatPrice(subtotal, currency, rate)],
                 [t.shipping, t.complimentary],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between mb-4">
@@ -144,13 +147,13 @@ export default function CartPage() {
             </div>
             <div className="border-t border-gold/25 pt-5 mb-6 flex justify-between items-baseline">
               <span className="text-[10px] tracking-[0.25em] uppercase text-oak-d font-normal">{t.total}</span>
-              <span className="font-cormorant font-semibold text-[26px] text-gold">{fmt(subtotal)}</span>
+              <span className="font-cormorant font-semibold text-[26px] text-gold">{formatPrice(subtotal, currency, rate)}</span>
             </div>
             <Link href="/checkout" className="block text-center w-full bg-gold text-espresso text-[9.5px] font-medium tracking-[0.28em] uppercase px-6 py-[17px] no-underline transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(201,167,82,0.3)]">
               {t.toCheckout}
             </Link>
             <p className="text-[10px] font-light text-muted text-center mt-4 leading-[1.7]">
-              {t.cartNote}
+              {shippingCopy?.cartNote?.[lang] || t.cartNote}
             </p>
           </div>
         )}

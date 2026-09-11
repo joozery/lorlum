@@ -8,6 +8,9 @@ import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useCart } from "@/context/cart";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
+import { useShippingCopy } from "@/hooks/use-shipping-copy";
 import ST from "@/lib/store-translations";
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -25,10 +28,6 @@ interface Product {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-function formatPrice(n: number) {
-  return "฿" + n.toLocaleString("th-TH");
-}
-
 function toProduct(raw: Record<string, unknown>): Product {
   return {
     id:               String(raw._id ?? raw.id),
@@ -57,6 +56,8 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const { addItem, count } = useCart();
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
+  const shippingCopy = useShippingCopy();
   const t = ST[lang];
 
   const [product,      setProduct]      = useState<Product | null>(null);
@@ -131,7 +132,7 @@ export default function ProductDetailPage() {
     product.materials        ? { title: ACCORD_LABELS.materials, content: product.materials }        : null,
     product.fitSizing        ? { title: ACCORD_LABELS.fitSizing, content: product.fitSizing }        : null,
     product.careInstructions ? { title: ACCORD_LABELS.care,      content: product.careInstructions } : null,
-    { title: t.accordShipping,  content: t.accordShippingBody },
+    { title: t.accordShipping,  content: shippingCopy?.accordShippingBody?.[lang] || t.accordShippingBody },
     { title: t.accordBespoke,   content: t.accordBespokeBody },
   ].filter(Boolean) as { title: string; content: string }[] : [];
 
@@ -218,11 +219,11 @@ export default function ProductDetailPage() {
           {/* Price */}
           <div className="flex items-baseline gap-4 mb-6">
             <span className="font-cormorant font-semibold text-[32px] text-gold">
-              {formatPrice(activeSize === "Bespoke" && product.bespokePrice ? product.bespokePrice : product.price)}
+              {formatPrice(activeSize === "Bespoke" && product.bespokePrice ? product.bespokePrice : product.price, currency, rate)}
             </span>
             <span className="text-[11px] text-muted font-light tracking-[0.06em]">{t.inclVAT}</span>
             {activeSize === "Bespoke" && product.bespokePrice && product.bespokePrice !== product.price && (
-              <span className="text-[10px] text-muted/50 line-through font-light">{formatPrice(product.price)}</span>
+              <span className="text-[10px] text-muted/50 line-through font-light">{formatPrice(product.price, currency, rate)}</span>
             )}
           </div>
 
@@ -342,8 +343,8 @@ export default function ProductDetailPage() {
           <div className="flex gap-3 p-4 bg-gold/[0.06] border border-gold/[0.15] mb-7">
             <span className="text-base">📦</span>
             <div>
-              <p className="text-[10px] font-normal tracking-[0.12em] uppercase text-oak-d mb-1">{t.deliveryTitle}</p>
-              <p className="text-[11px] font-light text-muted leading-[1.7]">{t.deliveryDesc}</p>
+              <p className="text-[10px] font-normal tracking-[0.12em] uppercase text-oak-d mb-1">{shippingCopy?.deliveryTitle?.[lang] || t.deliveryTitle}</p>
+              <p className="text-[11px] font-light text-muted leading-[1.7]">{shippingCopy?.deliveryDesc?.[lang] || t.deliveryDesc}</p>
             </div>
           </div>
 

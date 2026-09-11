@@ -85,9 +85,10 @@ function buildNAV(t: Translations): Section[] {
         {
           id: "storefront", label: t.storefront, href: "/storefront/hero", icon: Globe,
           children: [
-            { id: "sf-hero",    label: "Hero Section",    href: "/storefront/hero" },
-            { id: "sf-contact", label: "Contact & Inbox",  href: "/storefront/contact" },
-            { id: "sf-legal",   label: "Legal & Cookies",  href: "/storefront/legal" },
+            { id: "sf-hero",     label: "Hero Section",       href: "/storefront/hero" },
+            { id: "sf-shipping", label: "Shipping & Delivery", href: "/storefront/shipping" },
+            { id: "sf-contact",  label: "Contact & Inbox",     href: "/storefront/contact" },
+            { id: "sf-legal",    label: "Legal & Cookies",     href: "/storefront/legal" },
           ],
         },
       ],
