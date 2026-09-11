@@ -3,24 +3,37 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+const COOKIE_NAME = "cookie_consent";
+const COOKIE_MAX_AGE_DAYS = 180;
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function setCookie(name: string, value: string, days: number) {
+  const maxAge = days * 24 * 60 * 60;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
 export function CookieBanner() {
   const [visible, setVisible] = useState(false);
   const [detail,  setDetail]  = useState(false);
   const [prefs, setPrefs] = useState({ analytics: true, marketing: false });
 
   useEffect(() => {
-    if (!localStorage.getItem("cookie_consent")) {
+    if (!getCookie(COOKIE_NAME)) {
       setTimeout(() => setVisible(true), 800);
     }
   }, []);
 
   const accept = (all: boolean) => {
-    localStorage.setItem("cookie_consent", JSON.stringify({
+    setCookie(COOKIE_NAME, JSON.stringify({
       necessary: true,
       analytics: all ? true : prefs.analytics,
       marketing: all ? true : prefs.marketing,
       ts: Date.now(),
-    }));
+    }), COOKIE_MAX_AGE_DAYS);
     setVisible(false);
   };
 

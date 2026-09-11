@@ -32,7 +32,7 @@ export default function CookiesPage() {
   }, []);
 
   const resetConsent = () => {
-    localStorage.removeItem("cookie_consent");
+    document.cookie = "cookie_consent=; path=/; max-age=0";
     window.location.reload();
   };
 
