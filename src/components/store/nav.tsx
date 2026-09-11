@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { User } from "lucide-react";
+import { User, ChevronDown } from "lucide-react";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { CURRENCY_META, StoreCurrency } from "@/lib/currencies";
 import ST from "@/lib/store-translations";
 
 interface StoreNavProps {
@@ -11,10 +13,66 @@ interface StoreNavProps {
   cartCount?: number;
 }
 
+function CurrencyDropdown({
+  currency, setCurrency, options, compact = false,
+}: {
+  currency: StoreCurrency;
+  setCurrency: (c: StoreCurrency) => void;
+  options: StoreCurrency[];
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1 font-light uppercase text-muted hover:text-gold transition-colors duration-300 bg-transparent border border-gold/25 hover:border-gold/60 cursor-pointer font-jost ${
+          compact ? "text-[9px] tracking-[0.15em] px-2 py-1" : "text-[10px] tracking-[0.18em] px-2.5 py-1"
+        }`}
+      >
+        <span>{CURRENCY_META[currency].flag} {CURRENCY_META[currency].label}</span>
+        <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <ul className="absolute right-0 top-full mt-1.5 z-[1000] min-w-[110px] bg-ivory border border-gold/25 shadow-lg list-none py-1">
+          {options.map((c) => (
+            <li key={c}>
+              <button
+                type="button"
+                onClick={() => { setCurrency(c); setOpen(false); }}
+                className={`w-full text-left flex items-center gap-2 px-3 py-1.5 text-[10.5px] tracking-[0.1em] uppercase font-jost transition-colors duration-150 ${
+                  c === currency ? "text-gold bg-gold/10" : "text-muted hover:text-gold hover:bg-gold/5"
+                }`}
+              >
+                <span>{CURRENCY_META[c].flag}</span>
+                <span>{CURRENCY_META[c].label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [loggedIn,   setLoggedIn]   = useState(false);
   const { lang, setLang } = useStoreLang();
+  const { currency, setCurrency, availableCurrencies, allowSwitch } = useStoreCurrency();
+  const showCurrencySwitch = allowSwitch && availableCurrencies.length > 1;
   const t = ST[lang];
 
   useEffect(() => {
@@ -43,11 +101,8 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
         </ul>
 
         {/* Logo */}
-        <Link href="/" className="font-cormorant font-normal text-[26px] md:text-[30px] tracking-[0.06em] text-oak-d no-underline text-center leading-none absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+        <Link href="/" className="hidden md:block font-cormorant font-normal text-[26px] md:text-[30px] tracking-[0.06em] text-oak-d no-underline text-center leading-none absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
           LORLUM
-          <small className="block font-jost text-[7px] font-normal tracking-[0.6em] text-gold mt-[3px]">
-            {t.footerTagline}
-          </small>
         </Link>
 
         {/* Right links — desktop */}
@@ -76,6 +131,12 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
               {lang === "en" ? "🇹🇭 TH" : "🇺🇸 EN"}
             </button>
           </li>
+          {/* Currency switch */}
+          {showCurrencySwitch && (
+            <li>
+              <CurrencyDropdown currency={currency} setCurrency={setCurrency} options={availableCurrencies} />
+            </li>
+          )}
         </ul>
 
         {/* Mobile: lang toggle + hamburger */}
@@ -86,6 +147,9 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
           >
             {lang === "en" ? "TH" : "EN"}
           </button>
+          {showCurrencySwitch && (
+            <CurrencyDropdown currency={currency} setCurrency={setCurrency} options={availableCurrencies} compact />
+          )}
           <button
             className="flex flex-col gap-[5px] bg-transparent border-none cursor-pointer p-1"
             onClick={() => setMenuOpen(!menuOpen)}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Jost } from "next/font/google";
 import { StoreLanguageProvider } from "@/contexts/store-language-context";
+import { CurrencyProvider } from "@/contexts/store-currency-context";
 import { CartProvider } from "@/context/cart";
 import { CookieBanner } from "@/components/store/cookie-banner";
 import "./store.css";
@@ -42,12 +43,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <StoreLanguageProvider>
-      <CartProvider>
-        <div className={`${cormorant.variable} ${jost.variable} store-body`}>
-          {children}
-          <CookieBanner />
-        </div>
-      </CartProvider>
+      <CurrencyProvider>
+        <CartProvider>
+          <div className={`${cormorant.variable} ${jost.variable} store-body`}>
+            {children}
+            <CookieBanner />
+          </div>
+        </CartProvider>
+      </CurrencyProvider>
     </StoreLanguageProvider>
   );
 }

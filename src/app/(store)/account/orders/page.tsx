@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
 import ST from "@/lib/store-translations";
 
 interface OrderItem { productName: string; imageUrl: string; color: string; size: number; price: number; qty: number }
@@ -24,6 +26,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function OrdersPage() {
   const router = useRouter();
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
   const t = ST[lang];
 
   const NAV = [
@@ -126,7 +129,7 @@ export default function OrdersPage() {
                           {[item.color, item.size ? `EU ${item.size}` : ""].filter(Boolean).join(" · ")} × {item.qty}
                         </p>
                       </div>
-                      <p className="text-xs text-espresso shrink-0">฿{item.price.toLocaleString()}</p>
+                      <p className="text-xs text-espresso shrink-0">{formatPrice(item.price, currency, rate)}</p>
                     </div>
                   ))}
                   {order.items.length > 3 && (
@@ -136,7 +139,7 @@ export default function OrdersPage() {
 
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-gold/10">
                   <p className="text-[10px] tracking-[0.15em] uppercase text-muted">{t.total}</p>
-                  <p className="font-cormorant text-[20px] text-espresso">฿{order.total.toLocaleString()}</p>
+                  <p className="font-cormorant text-[20px] text-espresso">{formatPrice(order.total, currency, rate)}</p>
                 </div>
               </div>
             ))}

@@ -5,6 +5,8 @@ import Image from "next/image";
 import { RevealSection } from "@/components/store/reveal-section";
 import { HeroBackground } from "@/components/store/hero-background";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
 import ST from "@/lib/store-translations";
 
 interface ProductCard {
@@ -26,12 +28,9 @@ interface HeroSettings {
   badge: string;
 }
 
-function fmt(n: number) {
-  return "฿" + n.toLocaleString("th-TH");
-}
-
 export function HomeContent({ products, hero }: { products: ProductCard[]; hero: HeroSettings }) {
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
   const t = ST[lang];
 
   const sorted = [...products.filter(p => p.featured), ...products.filter(p => !p.featured)].slice(0, 6);
@@ -125,7 +124,7 @@ export function HomeContent({ products, hero }: { products: ProductCard[]; hero:
                 </h2>
                 <p className="font-light text-[13.5px] tracking-[0.03em] leading-[1.95] text-muted max-w-[420px] mb-9">{spotlight.category}</p>
                 <div className="flex items-baseline gap-4 mb-10">
-                  <span className="font-cormorant font-semibold text-[34px] text-gold">{fmt(spotlight.price)}</span>
+                  <span className="font-cormorant font-semibold text-[34px] text-gold">{formatPrice(spotlight.price, currency, rate)}</span>
                 </div>
                 <Link href={`/products/${spotlight.id}`} className="inline-block bg-oak-d text-gold-lt text-[10px] font-medium tracking-[0.28em] uppercase px-10 py-[17px] no-underline transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(44,31,15,0.25)]">
                   {t.reserveBtn}
@@ -221,7 +220,7 @@ export function HomeContent({ products, hero }: { products: ProductCard[]; hero:
                     <div className="p-info relative px-5 pt-5 pb-6 border-t border-gold/10">
                       <div className="flex justify-between items-start mb-1.5">
                         <span className="font-cormorant font-medium text-[17px] tracking-[0.03em] text-oak-d leading-[1.25] flex-1 line-clamp-2">{p.nameEn || p.name}</span>
-                        <span className="font-cormorant font-semibold text-[17px] tracking-[0.06em] text-gold ml-3 whitespace-nowrap">{fmt(p.price)}</span>
+                        <span className="font-cormorant font-semibold text-[17px] tracking-[0.06em] text-gold ml-3 whitespace-nowrap">{formatPrice(p.price, currency, rate)}</span>
                       </div>
                       <span className="text-[9.5px] font-light tracking-[0.16em] uppercase text-muted">{p.category}</span>
                     </div>

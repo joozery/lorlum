@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
 import ST from "@/lib/store-translations";
 
 interface WishProduct {
@@ -17,6 +19,7 @@ interface WishProduct {
 export default function WishlistPage() {
   const router = useRouter();
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
   const t = ST[lang];
 
   const NAV = [
@@ -97,7 +100,7 @@ export default function WishlistPage() {
                     </div>
                     <div className="p-4">
                       <p className="text-xs text-espresso leading-tight mb-1">{p.nameEn || p.name}</p>
-                      <p className="font-cormorant text-[18px] text-gold">฿{p.price.toLocaleString()}</p>
+                      <p className="font-cormorant text-[18px] text-gold">{formatPrice(p.price, currency, rate)}</p>
                     </div>
                   </Link>
                 </div>

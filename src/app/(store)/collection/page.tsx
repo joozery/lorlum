@@ -6,6 +6,8 @@ import Link from "next/link";
 import { StoreNav } from "@/components/store/nav";
 import { StoreFooter } from "@/components/store/footer";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
 import ST from "@/lib/store-translations";
 
 interface ProductItem {
@@ -28,10 +30,9 @@ interface CategoryItem {
   slug: string;
 }
 
-const fmt = (n: number) => "฿" + n.toLocaleString("th-TH");
-
 function ProductCard({ product }: { product: ProductItem }) {
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
   const t = ST[lang];
 
   const firstImage =
@@ -70,7 +71,7 @@ function ProductCard({ product }: { product: ProductItem }) {
               {product.nameEn || product.name}
             </span>
             <span className="font-cormorant font-semibold text-[17px] tracking-[0.06em] text-gold ml-3 whitespace-nowrap">
-              {fmt(product.price)}
+              {formatPrice(product.price, currency, rate)}
             </span>
           </div>
           <span className="text-[9.5px] font-light tracking-[0.16em] uppercase text-muted">
