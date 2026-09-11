@@ -6,7 +6,15 @@ import Link from "next/link";
 import { loadStripe } from "@stripe/stripe-js";
 import { useCart } from "@/context/cart";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripe() {
+  if (!stripePromise) {
+    stripePromise = fetch("/api/store/stripe-config")
+      .then((r) => r.json())
+      .then((d) => (d.publishableKey ? loadStripe(d.publishableKey) : null));
+  }
+  return stripePromise;
+}
 
 type State = "loading" | "success" | "pending" | "failed";
 
@@ -35,7 +43,7 @@ function CheckoutSuccessContent() {
 
     if (!orderId || !paymentIntentId) { setState("failed"); return; }
 
-    stripePromise.then(async (stripe) => {
+    getStripe().then(async (stripe) => {
       if (!stripe) { setState("failed"); return; }
 
       const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);

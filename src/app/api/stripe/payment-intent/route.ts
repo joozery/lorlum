@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-08-26.dahlia" });
+import { getPaymentSettings } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { orderId } = body;
 
   if (!orderId) return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+
+  const { stripe, enabled } = await getPaymentSettings();
+  if (!enabled || !stripe) {
+    return NextResponse.json({ error: "Payment is currently unavailable" }, { status: 503 });
+  }
 
   await connectDB();
   const order = await Order.findById(orderId);

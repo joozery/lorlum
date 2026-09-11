@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
 import Customer from "@/models/Customer";
 import { sendOrderConfirmationEmail } from "@/lib/email";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-08-26.dahlia" });
+import { getPaymentSettings } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const { orderId, paymentIntentId } = await req.json();
   if (!orderId || !paymentIntentId) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
+
+  const { stripe, enabled } = await getPaymentSettings();
+  if (!enabled || !stripe) {
+    return NextResponse.json({ error: "Payment is currently unavailable" }, { status: 503 });
   }
 
   await connectDB();

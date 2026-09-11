@@ -7,10 +7,20 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useCart } from "@/context/cart";
 import { useStoreLang } from "@/contexts/store-language-context";
+import { useStoreCurrency } from "@/contexts/store-currency-context";
+import { formatPrice } from "@/lib/format-price";
 import ST from "@/lib/store-translations";
 import { COUNTRIES } from "@/lib/countries";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripe() {
+  if (!stripePromise) {
+    stripePromise = fetch("/api/store/stripe-config")
+      .then((r) => r.json())
+      .then((d) => (d.publishableKey ? loadStripe(d.publishableKey) : null));
+  }
+  return stripePromise;
+}
 
 const inputCls = "w-full h-[52px] border-none border-b border-gold/30 bg-transparent font-jost text-[14px] font-light text-ltext tracking-[0.04em] outline-none px-1 transition-colors duration-300 focus:border-gold/60";
 const labelCls = "block text-[8.5px] tracking-[0.28em] uppercase text-muted font-light mb-2";
@@ -84,6 +94,7 @@ function StripePayForm({
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const { lang } = useStoreLang();
+  const { currency, rate } = useStoreCurrency();
   const t = ST[lang];
 
   const STEPS = [t.stepContact, t.stepDelivery, t.stepPayment];
@@ -103,7 +114,6 @@ export default function CheckoutPage() {
     line1: "", line2: "", city: "", province: "", zip: "", country: "Thailand",
   });
 
-  const fmt = (n: number) => "฿" + n.toLocaleString("th-TH");
 
   // Pre-fill from account if logged in
   useEffect(() => {
@@ -393,7 +403,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#C9A752", fontFamily: "Jost, sans-serif" } } }}>
+              <Elements stripe={getStripe()} options={{ clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#C9A752", fontFamily: "Jost, sans-serif" } } }}>
                 <StripePayForm
                   clientSecret={clientSecret}
                   orderId={orderId}
@@ -454,7 +464,7 @@ export default function CheckoutPage() {
                       <p className="text-[9px] text-muted">
                         {[item.color, item.size ? `EU ${item.size}` : "", `×${item.qty}`].filter(Boolean).join(" · ")}
                       </p>
-                      <p className="text-[11px] text-gold mt-0.5">฿{(item.price * item.qty).toLocaleString("th-TH")}</p>
+                      <p className="text-[11px] text-gold mt-0.5">{formatPrice(item.price * item.qty, currency, rate)}</p>
                     </div>
                   </div>
                 ))}
@@ -476,7 +486,7 @@ export default function CheckoutPage() {
             )}
 
             <div className="border-t border-gold/[0.12] pt-4 space-y-3">
-              {[[t.subtotal, fmt(subtotal || 0)], [t.shipping, t.complimentary]].map(([l, v]) => (
+              {[[t.subtotal, formatPrice(subtotal || 0, currency, rate)], [t.shipping, t.complimentary]].map(([l, v]) => (
                 <div key={l} className="flex justify-between">
                   <span className="text-[9.5px] tracking-[0.14em] uppercase text-muted font-light">{l}</span>
                   <span className={`text-[12px] font-light ${l === t.shipping ? "text-gold" : "text-ltext"}`}>{v}</span>
@@ -485,7 +495,7 @@ export default function CheckoutPage() {
             </div>
             <div className="border-t border-gold/20 pt-4 mt-3 flex justify-between items-baseline">
               <span className="text-[9.5px] tracking-[0.22em] uppercase text-oak-d font-normal">{t.total}</span>
-              <span className="font-cormorant font-semibold text-[24px] text-gold">{fmt(subtotal || 0)}</span>
+              <span className="font-cormorant font-semibold text-[24px] text-gold">{formatPrice(subtotal || 0, currency, rate)}</span>
             </div>
             <p className="text-[10px] font-light text-muted mt-4 leading-[1.7] text-center">🔒 {t.securedStripe}</p>
           </div>

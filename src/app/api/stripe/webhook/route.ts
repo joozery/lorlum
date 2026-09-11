@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-08-26.dahlia" });
+import { getPaymentSettings } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -11,9 +10,14 @@ export async function POST(req: NextRequest) {
 
   if (!sig) return NextResponse.json({ error: "No signature" }, { status: 400 });
 
+  const { stripe, webhookSecret } = await getPaymentSettings();
+  if (!stripe || !webhookSecret) {
+    return NextResponse.json({ error: "Payment is currently unavailable" }, { status: 503 });
+  }
+
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch {
     return NextResponse.json({ error: "Webhook signature invalid" }, { status: 400 });
   }
