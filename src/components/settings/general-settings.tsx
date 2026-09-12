@@ -11,8 +11,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+interface CompanyInfo {
+  name: string; nameEn: string; address: string; taxId: string; phone: string; email: string;
+}
+
+const DEFAULT_COMPANY: CompanyInfo = {
+  name: "", nameEn: "", address: "", taxId: "", phone: "", email: "",
+};
+
 export function GeneralSettings() {
   const [faviconUrl,    setFaviconUrl]    = useState("");
+  const [company,       setCompany]       = useState<CompanyInfo>(DEFAULT_COMPANY);
   const [uploading,     setUploading]     = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [saved,         setSaved]         = useState(false);
@@ -21,7 +30,10 @@ export function GeneralSettings() {
   useEffect(() => {
     fetch("/api/site-settings")
       .then((r) => r.json())
-      .then((d) => { if (d.faviconUrl) setFaviconUrl(d.faviconUrl); })
+      .then((d) => {
+        if (d.faviconUrl) setFaviconUrl(d.faviconUrl);
+        if (d.company) setCompany({ ...DEFAULT_COMPANY, ...d.company });
+      })
       .catch(() => {});
   }, []);
 
@@ -47,7 +59,7 @@ export function GeneralSettings() {
       await fetch("/api/site-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ faviconUrl }),
+        body: JSON.stringify({ faviconUrl, company }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -129,34 +141,37 @@ export function GeneralSettings() {
 
       {/* ข้อมูลร้านค้า */}
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-        <h3 className="text-sm font-semibold text-gray-900">ข้อมูลร้านค้า</h3>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">ข้อมูลร้านค้า / บริษัท</h3>
+          <p className="text-xs text-gray-400 mt-0.5">ใช้แสดงเป็น &quot;ผู้ซื้อ&quot; ในใบสั่งซื้อ (Purchase Order) และที่อื่นๆในระบบ</p>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>ชื่อร้าน (TH)</Label>
-            <Input defaultValue="ร้านของฉัน" />
+            <Label>ชื่อบริษัท (TH)</Label>
+            <Input value={company.name} onChange={(e) => setCompany((c) => ({ ...c, name: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label>Shop Name (EN)</Label>
-            <Input defaultValue="My Shop" />
+            <Label>Company Name (EN)</Label>
+            <Input value={company.nameEn} onChange={(e) => setCompany((c) => ({ ...c, nameEn: e.target.value }))} />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label>อีเมลร้านค้า</Label>
-          <Input type="email" defaultValue="shop@example.com" />
+          <Label>ที่อยู่</Label>
+          <Input value={company.address} onChange={(e) => setCompany((c) => ({ ...c, address: e.target.value }))} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label>เบอร์โทรศัพท์</Label>
-            <Input defaultValue="02-000-0000" />
+            <Input value={company.phone} onChange={(e) => setCompany((c) => ({ ...c, phone: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label>เว็บไซต์</Label>
-            <Input defaultValue="https://myshop.com" />
+            <Label>อีเมล</Label>
+            <Input type="email" value={company.email} onChange={(e) => setCompany((c) => ({ ...c, email: e.target.value }))} />
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label>ที่อยู่ร้านค้า</Label>
-          <Input defaultValue="กรุงเทพมหานคร 10100" />
+          <div className="space-y-1.5">
+            <Label>เลขผู้เสียภาษี</Label>
+            <Input className="font-mono" value={company.taxId} onChange={(e) => setCompany((c) => ({ ...c, taxId: e.target.value }))} />
+          </div>
         </div>
       </div>
 

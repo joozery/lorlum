@@ -18,6 +18,14 @@ export interface ISiteSettings {
     email: string;
     hours: string;
   };
+  company: {
+    name: string;
+    nameEn: string;
+    address: string;
+    taxId: string;
+    phone: string;
+    email: string;
+  };
   shippingCopy: {
     deliveryTitle: { en: string; th: string };
     deliveryDesc: { en: string; th: string };
@@ -45,6 +53,14 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       whatsappLink: { type: String, default: "#" },
       email:        { type: String, default: "support@lorlum.com" },
       hours:        { type: String, default: "Monday to Friday, 4am–11am CET\nSaturday and Sunday, 5am–10am CET" },
+    },
+    company: {
+      name:    { type: String, default: "บริษัท อีคอมเจม จำกัด" },
+      nameEn:  { type: String, default: "ECOMJAME CO., LTD." },
+      address: { type: String, default: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110" },
+      taxId:   { type: String, default: "0105566012345" },
+      phone:   { type: String, default: "02-123-4567" },
+      email:   { type: String, default: "purchase@ecomjame.com" },
     },
     shippingCopy: {
       deliveryTitle: {
