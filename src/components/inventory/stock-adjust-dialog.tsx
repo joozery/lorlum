@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUp, ArrowDown, ArrowUpDown, Package } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowUp, ArrowDown, ArrowUpDown, Package, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { mockStockItems, type StockItem } from "@/lib/data/inventory";
+import type { StockItem } from "@/components/inventory/stock-table";
 import { cn } from "@/lib/utils";
 
 const TYPE_OPTIONS = [
@@ -21,15 +21,54 @@ const TYPE_OPTIONS = [
 
 interface StockAdjustDialogProps {
   open: boolean;
+  items: StockItem[];
   selectedItem: StockItem | null;
   onClose: () => void;
 }
 
-export function StockAdjustDialog({ open, selectedItem, onClose }: StockAdjustDialogProps) {
+export function StockAdjustDialog({ open, items, selectedItem, onClose }: StockAdjustDialogProps) {
+  const [productId, setProductId] = useState<string | undefined>(undefined);
   const [type, setType]   = useState("in");
   const [qty, setQty]     = useState("");
+  const [note, setNote]   = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState("");
+
   const activeType = TYPE_OPTIONS.find((t) => t.value === type) ?? TYPE_OPTIONS[0];
   const TypeIcon = activeType.icon;
+  const activeItem = items.find((i) => i.id === productId) ?? null;
+
+  useEffect(() => {
+    if (open) {
+      setProductId(selectedItem?.id);
+      setType("in");
+      setQty("");
+      setNote("");
+      setError("");
+    }
+  }, [open, selectedItem]);
+
+  async function handleSave() {
+    const n = Number(qty);
+    if (!productId) { setError("กรุณาเลือกสินค้า"); return; }
+    if (!qty || Number.isNaN(n) || (type !== "adjustment" && n <= 0)) { setError("กรุณากรอกจำนวนให้ถูกต้อง"); return; }
+
+    const delta = type === "out" ? -Math.abs(n) : type === "in" ? Math.abs(n) : n;
+
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/inventory", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, delta, note }),
+      });
+      if (!res.ok) { setError("บันทึกล้มเหลว"); return; }
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -48,12 +87,12 @@ export function StockAdjustDialog({ open, selectedItem, onClose }: StockAdjustDi
           {/* Product selector */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">สินค้า</Label>
-            <Select defaultValue={selectedItem?.id}>
+            <Select value={productId} onValueChange={setProductId}>
               <SelectTrigger className="border-gray-200">
                 <SelectValue placeholder="เลือกสินค้า" />
               </SelectTrigger>
               <SelectContent>
-                {mockStockItems.map((i) => (
+                {items.map((i) => (
                   <SelectItem key={i.id} value={i.id}>
                     <div className="flex items-center gap-2">
                       <Package className="h-3.5 w-3.5 text-gray-400" />
@@ -67,21 +106,21 @@ export function StockAdjustDialog({ open, selectedItem, onClose }: StockAdjustDi
           </div>
 
           {/* Current stock display */}
-          {selectedItem && (
+          {activeItem && (
             <div className="rounded-2xl bg-gray-50 px-4 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">สต็อกปัจจุบัน</p>
               <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-gray-900">{selectedItem.stock}</span>
-                <span className="text-xs text-gray-400">/ {selectedItem.maxStock} ชิ้น</span>
+                <span className="text-2xl font-bold text-gray-900">{activeItem.stock}</span>
+                <span className="text-xs text-gray-400">/ {activeItem.maxStock} ชิ้น</span>
               </div>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
                 <div
                   className={cn(
                     "h-full rounded-full",
-                    selectedItem.stock <= 3 ? "bg-red-500" :
-                    selectedItem.stock <= selectedItem.minStock ? "bg-amber-400" : "bg-emerald-500"
+                    activeItem.stock <= 3 ? "bg-red-500" :
+                    activeItem.stock <= activeItem.minStock ? "bg-amber-400" : "bg-emerald-500"
                   )}
-                  style={{ width: `${Math.min((selectedItem.stock / selectedItem.maxStock) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((activeItem.stock / activeItem.maxStock) * 100, 100)}%` }}
                 />
               </div>
             </div>
@@ -115,7 +154,9 @@ export function StockAdjustDialog({ open, selectedItem, onClose }: StockAdjustDi
 
           {/* Quantity */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">จำนวน</Label>
+            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              จำนวน{type === "adjustment" ? " (+/-)" : ""}
+            </Label>
             <div className="flex items-center gap-2">
               <div className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-lg font-bold", activeType.color)}>
                 <TypeIcon className="h-4 w-4" />
@@ -123,7 +164,7 @@ export function StockAdjustDialog({ open, selectedItem, onClose }: StockAdjustDi
               <Input
                 type="number"
                 placeholder="0"
-                min="1"
+                min={type === "adjustment" ? undefined : "1"}
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
                 className="border-gray-200 text-lg font-bold"
@@ -138,16 +179,21 @@ export function StockAdjustDialog({ open, selectedItem, onClose }: StockAdjustDi
             <Textarea
               placeholder="เหตุผลหรือรายละเอียดเพิ่มเติม..."
               rows={2}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               className="resize-none border-gray-200 text-sm"
             />
           </div>
 
+          {error && <p className="text-xs text-red-600">{error}</p>}
+
           {/* Actions */}
           <div className="flex gap-2 pt-1">
-            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={onClose}>
+            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={onClose} disabled={saving}>
               ยกเลิก
             </Button>
-            <Button size="sm" className="flex-1 text-xs" onClick={onClose}>
+            <Button size="sm" className="flex-1 text-xs gap-1.5" onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               บันทึกการปรับ
             </Button>
           </div>

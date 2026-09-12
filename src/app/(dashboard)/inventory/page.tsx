@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Search, ArrowUpDown, Package, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ interface HistoryItem {
 }
 
 export default function InventoryPage() {
+  const router = useRouter();
   const [items,    setItems]    = useState<StockItem[]>([]);
   const [history,  setHistory]  = useState<HistoryItem[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -90,7 +92,13 @@ export default function InventoryPage() {
                 {items.filter(p => p.stock <= 3).map(p => p.name).join(" · ")}
               </p>
             </div>
-            <Button size="sm" variant="outline" className="flex-shrink-0 border-red-200 text-red-700 hover:bg-red-100 text-xs">สั่งซื้อ</Button>
+            <Button
+              size="sm" variant="outline"
+              className="flex-shrink-0 border-red-200 text-red-700 hover:bg-red-100 text-xs"
+              onClick={() => router.push("/purchases/new")}
+            >
+              สั่งซื้อ
+            </Button>
           </div>
         )}
 
@@ -149,6 +157,7 @@ export default function InventoryPage() {
 
         <StockAdjustDialog
           open={adjustOpen}
+          items={items}
           selectedItem={selectedItem}
           onClose={() => { setAdjustOpen(false); fetchData(); }}
         />
