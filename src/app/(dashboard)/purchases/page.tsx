@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { ShoppingBag, Clock, CheckCircle2, FileText, Search, Plus } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/shared/stats-card";
-import { PurchaseFormDialog } from "@/components/purchases/purchase-form";
 import { PurchaseTable } from "@/components/purchases/purchase-table";
 import { type Purchase } from "@/lib/data/purchases";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -20,9 +20,9 @@ const STATUS_FILTERS = [
 ];
 
 export default function PurchasesPage() {
+  const router = useRouter();
   const [purchases,    setPurchases]    = useState<Purchase[]>([]);
   const [loading,      setLoading]      = useState(true);
-  const [open,         setOpen]         = useState(false);
   const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -94,7 +94,7 @@ export default function PurchasesPage() {
             ))}
           </div>
 
-          <Button size="sm" className="ml-auto gap-2 text-xs" onClick={() => setOpen(true)}>
+          <Button size="sm" className="ml-auto gap-2 text-xs" onClick={() => router.push("/purchases/new")}>
             <Plus className="h-3.5 w-3.5" /> สร้างใบสั่งซื้อ
           </Button>
         </div>
@@ -106,11 +106,6 @@ export default function PurchasesPage() {
         ) : (
           <PurchaseTable purchases={filtered} onRefresh={fetchData} />
         )}
-
-        <PurchaseFormDialog open={open} onOpenChange={(v) => {
-          setOpen(v);
-          if (!v) fetchData(); // refresh after close
-        }} />
       </main>
     </div>
   );
