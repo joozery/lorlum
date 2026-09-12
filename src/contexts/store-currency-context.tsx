@@ -74,9 +74,20 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
         if (savedCur && isStoreCurrency(savedCur) && enabled.includes(savedCur)) {
           setCurrencyState(savedCur);
-        } else {
-          setCurrencyState("THB");
+          return;
         }
+
+        // No saved preference yet — try to guess from the visitor's country.
+        fetch("/api/store/geo-currency")
+          .then((r) => r.json())
+          .then((g) => {
+            if (isStoreCurrency(g?.currency) && enabled.includes(g.currency)) {
+              setCurrency(g.currency);
+            } else {
+              setCurrencyState("THB");
+            }
+          })
+          .catch(() => setCurrencyState("THB"));
       })
       .catch(() => {});
   }, []);
