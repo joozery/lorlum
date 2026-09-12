@@ -3,6 +3,10 @@ import mongoose, { Schema, model, models } from "mongoose";
 export interface ISiteSettings {
   key: string;
   faviconUrl: string;
+  seo: {
+    title: string;
+    description: string;
+  };
   hero: {
     bgImages: string[];
     headingLine1: string;
@@ -39,6 +43,10 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
     key:        { type: String, default: "main", unique: true },
     faviconUrl: { type: String, default: "/logolorlum.svg" },
+    seo: {
+      title:       { type: String, default: "LORLUM" },
+      description: { type: String, default: "Masterpiece handcrafted luxury shore footwear." },
+    },
     hero: {
       bgImages:      { type: [String], default: [] },
       headingLine1:  { type: String, default: "Linen" },

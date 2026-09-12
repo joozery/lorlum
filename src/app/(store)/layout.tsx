@@ -23,19 +23,23 @@ const jost = Jost({
 
 export async function generateMetadata(): Promise<Metadata> {
   let faviconUrl = "/logolorlum.svg";
+  let seoTitle = "LORLUM";
+  let seoDescription = "Masterpiece handcrafted luxury shore footwear.";
   try {
     const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
     const res = await fetch(`${base}/api/site-settings`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data.faviconUrl) faviconUrl = data.faviconUrl;
+      if (data.seo?.title) seoTitle = data.seo.title;
+      if (data.seo?.description) seoDescription = data.seo.description;
     }
   } catch {
     // fallback to default
   }
   return {
-    title: "LORLUM — Luxury Footwear",
-    description: "Masterpiece handcrafted luxury shore footwear.",
+    title: seoTitle,
+    description: seoDescription,
     icons: { icon: faviconUrl },
   };
 }

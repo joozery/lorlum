@@ -22,6 +22,7 @@ const DEFAULT_COMPANY: CompanyInfo = {
 export function GeneralSettings() {
   const [faviconUrl,    setFaviconUrl]    = useState("");
   const [company,       setCompany]       = useState<CompanyInfo>(DEFAULT_COMPANY);
+  const [seo,           setSeo]           = useState({ title: "LORLUM", description: "Masterpiece handcrafted luxury shore footwear." });
   const [uploading,     setUploading]     = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [saved,         setSaved]         = useState(false);
@@ -33,6 +34,7 @@ export function GeneralSettings() {
       .then((d) => {
         if (d.faviconUrl) setFaviconUrl(d.faviconUrl);
         if (d.company) setCompany({ ...DEFAULT_COMPANY, ...d.company });
+        if (d.seo) setSeo(d.seo);
       })
       .catch(() => {});
   }, []);
@@ -59,7 +61,7 @@ export function GeneralSettings() {
       await fetch("/api/site-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ faviconUrl, company }),
+        body: JSON.stringify({ faviconUrl, company, seo }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -137,6 +139,46 @@ export function GeneralSettings() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* SEO (Search Engine Optimization) */}
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">SEO (ข้อความสำหรับ Google Search)</h3>
+          <p className="text-xs text-gray-400 mt-0.5">ใช้สำหรับตั้งค่า Title และ Description ที่จะไปปรากฏในผลการค้นหาของ Google</p>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>ชื่อเว็บไซต์ (Browser Title)</Label>
+            <Input 
+              value={seo.title} 
+              onChange={(e) => setSeo((s) => ({ ...s, title: e.target.value }))} 
+              placeholder="เช่น LORLUM — Luxury Footwear" 
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>คำอธิบายเว็บไซต์ (Meta Description)</Label>
+            <Input 
+              value={seo.description} 
+              onChange={(e) => setSeo((s) => ({ ...s, description: e.target.value }))} 
+              placeholder="เช่น Masterpiece handcrafted luxury shore footwear." 
+            />
+          </div>
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full"
+        >
+          {saved ? (
+            <><Check className="h-3.5 w-3.5 mr-1.5" /> บันทึกแล้ว</>
+          ) : saving ? (
+            <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> กำลังบันทึก…</>
+          ) : (
+            "บันทึกข้อมูล SEO"
+          )}
+        </Button>
       </div>
 
       {/* ข้อมูลร้านค้า */}
