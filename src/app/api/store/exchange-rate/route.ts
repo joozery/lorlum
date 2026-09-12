@@ -6,6 +6,7 @@ const FALLBACK_RATES: Record<string, number> = {
   EUR: 0.0253,
   SGD: 0.0365,
   GBP: 0.0217,
+  AED: 0.1006,
 };
 const CACHE_MS = 60 * 60 * 1000; // 1 hour
 

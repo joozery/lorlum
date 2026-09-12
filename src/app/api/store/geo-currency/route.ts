@@ -12,6 +12,7 @@ function countryToCurrency(countryCode: string): string {
   if (countryCode === "US") return "USD";
   if (countryCode === "GB") return "GBP";
   if (countryCode === "SG") return "SGD";
+  if (countryCode === "AE") return "AED";
   if (EUR_COUNTRIES.has(countryCode)) return "EUR";
   return "USD"; // default for any other country
 }
