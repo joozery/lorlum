@@ -91,7 +91,7 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-[999] h-[60px] md:h-[68px] px-5 md:px-[52px] flex items-center justify-between bg-ivory/95 backdrop-blur-[18px] border-b border-gold/[0.12] transition-all duration-300">
+      <nav className="fixed top-0 left-0 right-0 z-[999] h-[60px] md:h-[68px] px-5 md:px-[52px] grid grid-cols-[1fr_auto_1fr] md:flex md:justify-between items-center bg-ivory/95 backdrop-blur-[18px] border-b border-gold/[0.12] transition-all duration-300">
 
         {/* Left links — desktop */}
         <ul className="hidden md:flex gap-9 list-none">
@@ -101,7 +101,7 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
         </ul>
 
         {/* Logo */}
-        <Link href="/" className="hidden md:block font-cormorant font-normal text-[26px] md:text-[30px] tracking-[0.06em] text-oak-d no-underline text-center leading-none absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+        <Link href="/" className="col-start-2 md:col-auto font-cormorant font-normal text-[22px] md:text-[30px] tracking-[0.06em] text-oak-d no-underline text-center leading-none whitespace-nowrap">
           LORLUM
         </Link>
 
@@ -139,17 +139,8 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
           )}
         </ul>
 
-        {/* Mobile: lang toggle + hamburger */}
-        <div className="flex md:hidden items-center gap-3">
-          <button
-            onClick={() => setLang(lang === "en" ? "th" : "en")}
-            className="text-[9px] tracking-[0.15em] uppercase text-muted border border-gold/25 px-2 py-1 bg-transparent cursor-pointer font-jost"
-          >
-            {lang === "en" ? "TH" : "EN"}
-          </button>
-          {showCurrencySwitch && (
-            <CurrencyDropdown currency={currency} setCurrency={setCurrency} options={availableCurrencies} compact />
-          )}
+        {/* Mobile: hamburger */}
+        <div className="col-start-3 md:col-auto flex md:hidden items-center justify-self-end">
           <button
             className="flex flex-col gap-[5px] bg-transparent border-none cursor-pointer p-1"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -170,6 +161,17 @@ export function StoreNav({ active, cartCount = 0 }: StoreNavProps) {
         <Link href="/contact" className={mobileLink("contact")} onClick={() => setMenuOpen(false)}>{t.navContact}</Link>
         <Link href="/account"    className={mobileLink()}             onClick={() => setMenuOpen(false)}>{t.navAccount}</Link>
         <Link href="/cart"       className={mobileLink("cart")}       onClick={() => setMenuOpen(false)}>{t.navCart} ({cartCount})</Link>
+        <div className="flex items-center gap-4 px-7 py-5 mt-2">
+          <button
+            onClick={() => setLang(lang === "en" ? "th" : "en")}
+            className="text-[10px] tracking-[0.15em] uppercase text-muted border border-gold/25 px-3 py-1.5 bg-transparent cursor-pointer font-jost"
+          >
+            {lang === "en" ? "🇹🇭 TH" : "🇺🇸 EN"}
+          </button>
+          {showCurrencySwitch && (
+            <CurrencyDropdown currency={currency} setCurrency={setCurrency} options={availableCurrencies} compact />
+          )}
+        </div>
       </div>
     </>
   );
