@@ -41,6 +41,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: seoTitle,
     description: seoDescription,
     icons: { icon: faviconUrl },
+    verification: {
+      google: "QNxtoYrMTUVVPbHrnvpr6oUwU3yBVXJ2_Rs3",
+    },
   };
 }
 
