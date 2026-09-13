@@ -21,6 +21,7 @@ interface ProductCard {
 
 interface HeroSettings {
   bgImages: string[];
+  bgVideoUrl?: string;
   headingLine1: string;
   headingLine2: string;
   subtext: string;
@@ -35,18 +36,19 @@ export function HomeContent({ products, hero }: { products: ProductCard[]; hero:
 
   const sorted = [...products.filter(p => p.featured), ...products.filter(p => !p.featured)].slice(0, 6);
   const spotlight = sorted[0] ?? null;
+  const hasBg = Boolean(hero.bgVideoUrl) || hero.bgImages.length > 0;
 
   return (
     <>
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-espresso">
-        {hero.bgImages.length > 0 ? (
-          <HeroBackground images={hero.bgImages} />
+        {hasBg ? (
+          <HeroBackground images={hero.bgImages} videoUrl={hero.bgVideoUrl} />
         ) : (
           <div className="absolute inset-0 anim-hero" style={{ background: "radial-gradient(ellipse 60% 50% at 30% 20%, rgba(201,167,82,0.35) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 75% 70%, rgba(201,167,82,0.22) 0%, transparent 60%), linear-gradient(155deg,#1A1208 0%,#2C1F0F 40%,#4A3219 75%,#6B4E2A 100%)", backgroundSize: "200% 200%, 200% 200%, 100% 100%" }} />
         )}
         <div className="absolute inset-[-20%] anim-sweep mix-blend-screen pointer-events-none" style={{ background: "linear-gradient(115deg, transparent 40%, rgba(232,213,163,0.14) 48%, rgba(255,255,255,0.05) 50%, transparent 58%)" }} />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: hero.bgImages.length > 0 ? "radial-gradient(ellipse 80% 70% at 50% 50%, rgba(26,18,8,0.45) 20%, rgba(26,18,8,0.72) 100%)" : "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(26,18,8,0.55) 100%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: hasBg ? "radial-gradient(ellipse 80% 70% at 50% 50%, rgba(26,18,8,0.45) 20%, rgba(26,18,8,0.72) 100%)" : "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(26,18,8,0.55) 100%)" }} />
 
         <div className="relative z-10 text-center px-6">
           <span className="block text-[9.5px] font-normal tracking-[0.6em] uppercase text-gold-lt mb-6 anim-rise-1">

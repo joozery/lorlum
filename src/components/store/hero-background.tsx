@@ -5,19 +5,33 @@ import Image from "next/image";
 
 interface Props {
   images: string[];
+  videoUrl?: string;
   intervalMs?: number;
 }
 
-export function HeroBackground({ images, intervalMs = 6000 }: Props) {
+export function HeroBackground({ images, videoUrl, intervalMs = 6000 }: Props) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    if (images.length < 2) return;
+    if (videoUrl || images.length < 2) return;
     const id = setInterval(() => {
       setActive(prev => (prev + 1) % images.length);
     }, intervalMs);
     return () => clearInterval(id);
-  }, [images.length, intervalMs]);
+  }, [images.length, intervalMs, videoUrl]);
+
+  if (videoUrl) {
+    return (
+      <video
+        src={videoUrl}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+    );
+  }
 
   return (
     <>

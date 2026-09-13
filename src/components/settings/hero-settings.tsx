@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Upload, Trash2, ExternalLink, Loader2, Check, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, Trash2, ExternalLink, Loader2, Check, Plus, ChevronLeft, ChevronRight, Film } from "lucide-react";
 
 interface HeroData {
   bgImages: string[];
+  bgVideoUrl: string;
   headingLine1: string;
   headingLine2: string;
   subtext: string;
@@ -15,6 +16,7 @@ interface HeroData {
 
 const DEFAULT: HeroData = {
   bgImages: [],
+  bgVideoUrl: "",
   headingLine1: "Linen",
   headingLine2: "Collection",
   subtext: "Thomas Mason Gold Linen, hand-lasted by masterpiece artisans on the exclusive private curated.",
@@ -28,8 +30,10 @@ export function HeroSettings() {
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [previewIdx, setPreviewIdx] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/site-settings")
@@ -50,7 +54,7 @@ export function HeroSettings() {
       .finally(() => setLoading(false));
   }, []);
 
-  function setText(field: keyof Omit<HeroData, "bgImages">, value: string) {
+  function setText(field: keyof Omit<HeroData, "bgImages" | "bgVideoUrl">, value: string) {
     setData(prev => ({ ...prev, [field]: value }));
     setSaved(false);
   }
@@ -85,6 +89,42 @@ export function HeroSettings() {
       setPreviewIdx(p => Math.min(p, next.length - 1));
       return { ...prev, bgImages: next };
     });
+    setSaved(false);
+    if (url?.includes("r2.dev")) {
+      await fetch("/api/upload/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+    }
+  }
+
+  async function handleUploadVideo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingVideo(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("productId", "hero");
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "อัปโหลดล้มเหลว" }));
+        alert(error ?? "อัปโหลดล้มเหลว");
+        return;
+      }
+      const { url } = await res.json();
+      setData(prev => ({ ...prev, bgVideoUrl: url }));
+      setSaved(false);
+    } finally {
+      setUploadingVideo(false);
+      if (videoRef.current) videoRef.current.value = "";
+    }
+  }
+
+  async function handleRemoveVideo() {
+    const url = data.bgVideoUrl;
+    setData(prev => ({ ...prev, bgVideoUrl: "" }));
     setSaved(false);
     if (url?.includes("r2.dev")) {
       await fetch("/api/upload/delete", {
@@ -267,7 +307,61 @@ export function HeroSettings() {
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleUpload} />
         <p className="text-[11px] text-gray-400">
           หากไม่มีรูป ระบบจะใช้ gradient สีน้ำตาลทองตามค่าเดิม · คลิกรูปเพื่อดู preview
+          {data.bgVideoUrl && " · ตอนนี้มีวิดีโอตั้งอยู่ วิดีโอจะแสดงแทนรูปพวกนี้บนหน้าบ้าน"}
         </p>
+      </div>
+
+      {/* Background video */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800">วิดีโอพื้นหลัง Hero</h3>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              ถ้าตั้งวิดีโอ จะเล่นแทนรูปพื้นหลังด้านบนบนหน้าบ้าน (autoplay, ปิดเสียง, วนลูป)
+            </p>
+          </div>
+          {!data.bgVideoUrl && (
+            <button
+              onClick={() => videoRef.current?.click()}
+              disabled={uploadingVideo}
+              className="flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-800 border border-violet-200 hover:border-violet-400 rounded-lg px-3 py-2 transition-all disabled:opacity-50"
+            >
+              {uploadingVideo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Film className="h-3.5 w-3.5" />}
+              {uploadingVideo ? "กำลังอัปโหลด..." : "เพิ่มวิดีโอ"}
+            </button>
+          )}
+        </div>
+
+        {data.bgVideoUrl ? (
+          <div className="relative rounded-lg overflow-hidden border-2 border-violet-500 shadow-md" style={{ aspectRatio: "16/9" }}>
+            <video src={data.bgVideoUrl} className="absolute inset-0 w-full h-full object-cover" muted loop autoPlay playsInline />
+            <button
+              onClick={handleRemoveVideo}
+              title="ลบวิดีโอ"
+              className="absolute top-2 right-2 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5 text-white" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => videoRef.current?.click()}
+            disabled={uploadingVideo}
+            className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-12 hover:border-gray-300 hover:bg-gray-100 transition-all disabled:opacity-60"
+          >
+            {uploadingVideo ? (
+              <Loader2 className="h-7 w-7 animate-spin text-gray-400" />
+            ) : (
+              <Film className="h-7 w-7 text-gray-400" />
+            )}
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-600">{uploadingVideo ? "กำลังอัปโหลด..." : "อัปโหลดวิดีโอพื้นหลัง"}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">MP4, WebM · ไม่เกิน 20MB · แนะนำ 1920×1080px, ไม่มีเสียง</p>
+            </div>
+          </button>
+        )}
+
+        <input ref={videoRef} type="file" accept="video/mp4,video/webm" className="hidden" onChange={handleUploadVideo} />
       </div>
 
       {/* Text fields */}
@@ -331,7 +425,7 @@ export function HeroSettings() {
       <div className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-800">Preview</h3>
-          {data.bgImages.length > 1 && (
+          {!data.bgVideoUrl && data.bgImages.length > 1 && (
             <div className="flex items-center gap-1">
               {data.bgImages.map((_, i) => (
                 <button
@@ -350,9 +444,11 @@ export function HeroSettings() {
             background: "linear-gradient(155deg,#1A1208 0%,#2C1F0F 40%,#4A3219 75%,#6B4E2A 100%)",
           }}
         >
-          {previewImg && (
+          {data.bgVideoUrl ? (
+            <video src={data.bgVideoUrl} className="absolute inset-0 w-full h-full object-cover" muted loop autoPlay playsInline />
+          ) : previewImg ? (
             <Image src={previewImg} alt="preview" fill className="object-cover" unoptimized />
-          )}
+          ) : null}
           <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(26,18,8,0.6) 100%)" }} />
           <div className="relative z-10 text-center px-6">
             {data.badge && (

@@ -6,8 +6,12 @@ const ALLOWED: Record<string, string> = {
   "image/jpg":  "jpg",
   "image/png":  "png",
   "image/webp": "webp",
+  "video/mp4":  "mp4",
+  "video/webm": "webm",
 };
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const VIDEO_TYPES = new Set(["video/mp4", "video/webm"]);
+const MAX_SIZE       = 5 * 1024 * 1024;  // 5 MB — images
+const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20 MB — video
 
 // POST /api/upload
 // Body: FormData { file: File, productId?: string, colorName?: string }
@@ -23,10 +27,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
     if (!ALLOWED[file.type]) {
-      return NextResponse.json({ error: "Only JPEG, PNG, WebP allowed" }, { status: 400 });
+      return NextResponse.json({ error: "Only JPEG, PNG, WebP, MP4, WebM allowed" }, { status: 400 });
     }
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File too large (max 5 MB)" }, { status: 400 });
+    const isVideo = VIDEO_TYPES.has(file.type);
+    const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_SIZE;
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: `File too large (max ${maxSize / (1024 * 1024)} MB)` }, { status: 400 });
     }
 
     const ext      = ALLOWED[file.type];

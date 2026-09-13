@@ -14,6 +14,7 @@ interface ProductCard {
 
 interface HeroSettings {
   bgImages: string[];
+  bgVideoUrl: string;
   headingLine1: string;
   headingLine2: string;
   subtext: string;
@@ -23,6 +24,7 @@ interface HeroSettings {
 
 const HERO_DEFAULTS: HeroSettings = {
   bgImages:     [],
+  bgVideoUrl:   "",
   headingLine1: "Linen",
   headingLine2: "Collection",
   subtext:      "Thomas Mason Gold Linen, hand-lasted by masterpiece artisans on the exclusive private curated.",

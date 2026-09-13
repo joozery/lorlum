@@ -9,6 +9,7 @@ export interface ISiteSettings {
   };
   hero: {
     bgImages: string[];
+    bgVideoUrl: string;
     headingLine1: string;
     headingLine2: string;
     subtext: string;
@@ -49,6 +50,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     },
     hero: {
       bgImages:      { type: [String], default: [] },
+      bgVideoUrl:    { type: String, default: "" },
       headingLine1:  { type: String, default: "Linen" },
       headingLine2:  { type: String, default: "Collection" },
       subtext:       { type: String, default: "Thomas Mason Gold Linen, hand-lasted by masterpiece artisans on the exclusive private curated." },

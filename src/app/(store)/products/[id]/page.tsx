@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,6 +49,226 @@ function toProduct(raw: Record<string, unknown>): Product {
     careInstructions: String(raw.careInstructions ?? ""),
   };
 }
+
+// ── Gallery Carousel ──────────────────────────────────────────────────────
+interface GalleryCarouselProps {
+  images: string[];
+  alt: string;
+  activeImg: number;
+  setActiveImg: (i: number) => void;
+}
+
+function GalleryCarousel({ images, alt, activeImg, setActiveImg }: GalleryCarouselProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const startXRef = useRef<number | null>(null);
+  const isDraggingRef = useRef(false);
+  const [lightbox, setLightbox] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+
+  const total = images.length;
+
+  const goPrev = useCallback(() => {
+    setActiveImg((activeImg - 1 + total) % total);
+  }, [activeImg, total, setActiveImg]);
+
+  const goNext = useCallback(() => {
+    setActiveImg((activeImg + 1) % total);
+  }, [activeImg, total, setActiveImg]);
+
+  const lbPrev = useCallback(() => setLightboxIdx((i) => (i - 1 + total) % total), [total]);
+  const lbNext = useCallback(() => setLightboxIdx((i) => (i + 1) % total), [total]);
+
+  const openLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIdx(activeImg);
+    setLightbox(true);
+  };
+
+  // Keyboard nav in lightbox
+  useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft")  lbPrev();
+      if (e.key === "ArrowRight") lbNext();
+      if (e.key === "Escape")     setLightbox(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightbox, lbPrev, lbNext]);
+
+  // Touch / Mouse drag support
+  const onTouchStart = (e: React.TouchEvent) => { startXRef.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e: React.TouchEvent) => {
+    if (startXRef.current === null) return;
+    const diff = startXRef.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) diff > 0 ? goNext() : goPrev();
+    startXRef.current = null;
+  };
+  const onMouseDown = (e: React.MouseEvent) => { startXRef.current = e.clientX; isDraggingRef.current = false; };
+  const onMouseMove = (e: React.MouseEvent) => { if (startXRef.current !== null) isDraggingRef.current = true; void e; };
+  const onMouseUp   = (e: React.MouseEvent) => {
+    if (startXRef.current === null) return;
+    const diff = startXRef.current - e.clientX;
+    if (Math.abs(diff) > 40) diff > 0 ? goNext() : goPrev();
+    startXRef.current = null;
+  };
+
+  if (total === 0) {
+    return (
+      <div className="relative overflow-hidden border border-gold/[0.15]" style={{ aspectRatio: "4/5" }}>
+        <div className="absolute inset-0 bg-cream flex items-center justify-center">
+          <span className="font-cormorant font-light text-[120px] text-gold/20 leading-none">L</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="relative select-none">
+        {/* Slide track */}
+        <div
+          ref={trackRef}
+          className="overflow-hidden relative border border-gold/[0.15] cursor-grab active:cursor-grabbing"
+          style={{ aspectRatio: "4/5" }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+        >
+          {/* Slides */}
+          <div
+            className="flex h-full transition-transform duration-500 ease-in-out"
+            style={{ width: `${total * 100}%`, transform: `translateX(-${(activeImg / total) * 100}%)` }}
+          >
+            {images.map((src, i) => (
+              <div key={i} className="relative h-full flex-shrink-0" style={{ width: `${100 / total}%` }}>
+                <Image
+                  src={src}
+                  alt={`${alt} ${i + 1}`}
+                  fill
+                  sizes="(max-width:768px) 100vw, 50vw"
+                  className="object-cover"
+                  unoptimized
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* ── Bottom bar: dots left | "+" right ── */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-t from-espresso/50 to-transparent">
+            {/* Dots – left */}
+            <div className="flex items-center gap-2">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setActiveImg(i); }}
+                  aria-label={`Go to image ${i + 1}`}
+                  className={`transition-all duration-300 rounded-full border-none cursor-pointer p-0 ${
+                    activeImg === i
+                      ? "w-5 h-1.5 bg-gold"
+                      : "w-1.5 h-1.5 bg-ivory/50 hover:bg-ivory/80"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* "+" expand button – right */}
+            <button
+              onClick={openLightbox}
+              aria-label="View full image"
+              className="w-8 h-8 flex items-center justify-center bg-ivory/15 hover:bg-gold hover:text-espresso text-ivory border border-ivory/30 hover:border-gold transition-all duration-200 rounded-sm text-lg leading-none font-light"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Lightbox Modal ── */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[9999] bg-espresso/95 flex items-center justify-center backdrop-blur-md"
+          onClick={() => setLightbox(false)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightbox(false)}
+            aria-label="Close"
+            className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center text-ivory/70 hover:text-gold bg-transparent border border-ivory/20 hover:border-gold transition-all duration-200 text-xl z-10"
+          >
+            ×
+          </button>
+
+          {/* Counter */}
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-[9px] tracking-[0.35em] uppercase text-ivory/50">
+            {lightboxIdx + 1} / {total}
+          </div>
+
+          {/* Image */}
+          <div
+            className="relative w-[90vw] max-w-[700px]"
+            style={{ aspectRatio: "4/5" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={images[lightboxIdx]}
+              alt={`${alt} ${lightboxIdx + 1}`}
+              fill
+              sizes="90vw"
+              className="object-contain"
+              unoptimized
+            />
+          </div>
+
+          {/* Prev arrow */}
+          {total > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); lbPrev(); }}
+                aria-label="Previous image"
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-ivory/70 hover:text-gold border border-ivory/20 hover:border-gold bg-espresso/40 hover:bg-espresso/70 transition-all duration-200 backdrop-blur-sm"
+              >
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                  <path d="M8 1L3 6L8 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); lbNext(); }}
+                aria-label="Next image"
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-ivory/70 hover:text-gold border border-ivory/20 hover:border-gold bg-espresso/40 hover:bg-espresso/70 transition-all duration-200 backdrop-blur-sm"
+              >
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 1L9 6L4 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Thumbnail strip */}
+          {total > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5">
+              {images.map((src, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
+                  className={`relative w-12 h-14 overflow-hidden transition-all duration-200 border p-0 bg-transparent cursor-pointer ${
+                    lightboxIdx === i ? "border-gold" : "border-ivory/20 opacity-50 hover:opacity-80"
+                  }`}
+                >
+                  <Image src={src} alt={`thumb ${i + 1}`} fill sizes="48px" className="object-cover" unoptimized />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function ProductDetailPage() {
@@ -174,40 +394,13 @@ export default function ProductDetailPage() {
       {/* PRODUCT LAYOUT */}
       <div className="max-w-[1320px] mx-auto px-5 md:px-20 py-10 md:py-16 pb-20 md:pb-32 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 items-start">
 
-        {/* GALLERY */}
-        <div className="flex gap-3 md:gap-4">
-          {/* Thumbs */}
-          {gallery.length > 1 && (
-            <div className="flex flex-col gap-2.5 md:gap-3 flex-shrink-0">
-              {gallery.map((src, i) => (
-                <div
-                  key={i}
-                  onClick={() => setActiveImg(i)}
-                  className={`w-[60px] md:w-[72px] cursor-pointer overflow-hidden relative border transition-colors duration-300 ${activeImg === i ? "border-gold" : "border-gold/20"}`}
-                  style={{ aspectRatio: "6/7" }}
-                >
-                  <Image src={src} alt={`thumb-${i}`} fill sizes="72px" className="object-cover" unoptimized />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Main image */}
-          <div className="flex-1 relative overflow-hidden border border-gold/[0.15]" style={{ aspectRatio: "4/5" }}>
-            {gallery[activeImg] ? (
-              <Image src={gallery[activeImg]} alt={product.nameEn || product.name} fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover" unoptimized />
-            ) : (
-              <div className="absolute inset-0 bg-cream flex items-center justify-center">
-                <span className="font-cormorant font-light text-[120px] text-gold/20 leading-none">L</span>
-              </div>
-            )}
-            {gallery.length > 1 && (
-              <div className="absolute bottom-4 right-4 text-[8.5px] tracking-[0.2em] uppercase bg-ivory/88 px-3.5 py-1.5 border border-gold/25 text-oak-d backdrop-blur-sm">
-                {activeImg + 1} / {gallery.length}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* GALLERY — Card Slide Carousel */}
+        <GalleryCarousel
+          images={gallery}
+          alt={product.nameEn || product.name}
+          activeImg={activeImg}
+          setActiveImg={setActiveImg}
+        />
 
         {/* INFO */}
         <div className="pt-0 md:pt-2">
