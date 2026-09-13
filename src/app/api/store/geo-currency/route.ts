@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isStoreCurrency } from "@/lib/currencies";
+import { StoreCurrency } from "@/lib/currencies";
 
 const CACHE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+const EUROZONE_COUNTRIES = new Set([
+  "AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE",
+  "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES",
+]);
+
+function currencyForCountry(countryCode: string | null | undefined): StoreCurrency {
+  if (!countryCode) return "USD";
+  const cc = countryCode.toUpperCase();
+  if (cc === "TH") return "THB";
+  if (cc === "SG") return "SGD";
+  if (cc === "GB") return "GBP";
+  if (cc === "AE") return "AED";
+  if (EUROZONE_COUNTRIES.has(cc)) return "EUR";
+  return "USD";
+}
 
 function getVisitorIp(req: NextRequest): string | null {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -23,11 +39,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(`https://ipwho.is/${ip}?fields=success,currency`);
+    const res = await fetch(`https://ipwho.is/${ip}?fields=success,country_code`);
     if (!res.ok) throw new Error(`upstream ${res.status}`);
     const data = await res.json();
-    const code = data?.success ? data?.currency?.code : null;
-    const currency = isStoreCurrency(code) ? code : "USD"; // default for unsupported currencies
+    const currency = data?.success ? currencyForCountry(data?.country_code) : "USD";
     cache.set(ip, { currency, expiresAt: Date.now() + CACHE_MS });
     return NextResponse.json({ currency });
   } catch (err) {
