@@ -7,6 +7,8 @@ export type { StoreCurrency };
 
 const CACHE_KEY = "store-currency-rates";
 const CACHE_MS = 60 * 60 * 1000;
+const CURRENCY_KEY = "store-currency";
+const CURRENCY_SOURCE_KEY = "store-currency-source";
 
 interface StoreCurrencyCtxValue {
   currency: StoreCurrency;
@@ -34,7 +36,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [allowSwitch, setAllowSwitch] = useState(false);
 
   useEffect(() => {
-    const savedCur = localStorage.getItem("store-currency");
+    const savedCur = localStorage.getItem(CURRENCY_KEY);
+    const savedSource = localStorage.getItem(CURRENCY_SOURCE_KEY);
 
     let cachedRates: { rates: Record<string, number>; updatedAt: number } | null = null;
     try {
@@ -72,29 +75,45 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         setAvailableCurrencies(enabled.length ? enabled : ["THB"]);
         setAllowSwitch(!!d?.allowCustomerSwitch);
 
-        if (savedCur && isStoreCurrency(savedCur) && enabled.includes(savedCur)) {
-          setCurrencyState(savedCur);
+        const hasValidSaved = savedCur && isStoreCurrency(savedCur) && enabled.includes(savedCur);
+
+        if (hasValidSaved) {
+          setCurrencyState(savedCur as StoreCurrency);
+        }
+
+        // A currency the customer picked themselves is sticky forever — don't override it.
+        if (hasValidSaved && savedSource === "user") {
           return;
         }
 
-        // No saved preference yet — try to guess from the visitor's country.
+        // No preference, or the current value was only auto-detected — (re)check the
+        // visitor's country so a VPN/location change is picked up on the next visit.
         fetch("/api/store/geo-currency")
           .then((r) => r.json())
           .then((g) => {
             if (isStoreCurrency(g?.currency) && enabled.includes(g.currency)) {
-              setCurrency(g.currency);
-            } else {
+              setAutoCurrency(g.currency);
+            } else if (!hasValidSaved) {
               setCurrencyState("THB");
             }
           })
-          .catch(() => setCurrencyState("THB"));
+          .catch(() => {
+            if (!hasValidSaved) setCurrencyState("THB");
+          });
       })
       .catch(() => {});
   }, []);
 
   const setCurrency = (c: StoreCurrency) => {
     setCurrencyState(c);
-    localStorage.setItem("store-currency", c);
+    localStorage.setItem(CURRENCY_KEY, c);
+    localStorage.setItem(CURRENCY_SOURCE_KEY, "user");
+  };
+
+  const setAutoCurrency = (c: StoreCurrency) => {
+    setCurrencyState(c);
+    localStorage.setItem(CURRENCY_KEY, c);
+    localStorage.setItem(CURRENCY_SOURCE_KEY, "auto");
   };
 
   const rate = currency === "THB" ? 1 : rates[currency] ?? 0;
