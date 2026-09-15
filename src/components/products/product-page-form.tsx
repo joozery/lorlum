@@ -86,8 +86,10 @@ function VariantCard({
         form.append("colorName", variant.name);
         const res = await fetch("/api/upload", { method: "POST", body: form });
         if (!res.ok) {
-          const err = await res.json();
-          alert(`อัปโหลดล้มเหลว: ${err.error ?? "unknown"}`);
+          const message = res.status === 413
+            ? "ไฟล์มีขนาดใหญ่เกินไป"
+            : await res.json().then((j) => j.error, () => `HTTP ${res.status}`);
+          alert(`อัปโหลดล้มเหลว: ${message}`);
           break;
         }
         const data = await res.json();
@@ -333,8 +335,10 @@ export function ProductPageForm({ product }: ProductPageFormProps) {
         form.append("productId", product?.id ?? "new");
         const res = await fetch("/api/upload", { method: "POST", body: form });
         if (!res.ok) {
-          const err = await res.json();
-          alert(`อัปโหลดล้มเหลว: ${err.error ?? "unknown"}`);
+          const message = res.status === 413
+            ? "ไฟล์มีขนาดใหญ่เกินไป"
+            : await res.json().then((j) => j.error, () => `HTTP ${res.status}`);
+          alert(`อัปโหลดล้มเหลว: ${message}`);
           break;
         }
         const data = await res.json();
